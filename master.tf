@@ -65,12 +65,12 @@ data "ignition_file" "master_iptables_rules" {
 -A INPUT -p tcp -m tcp -s "${var.ssh_address_range}" --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
 # Allow masters to talk
 -A INPUT -p tcp -m tcp -s "${var.masters_subnet_cidr}" -j ACCEPT
--A INPUT -p tcp -m udp -s "${var.masters_subnet_cidr}" -j ACCEPT
--A INPUT -p tcp -m ipip -s "${var.masters_subnet_cidr}" -j ACCEPT
+-A INPUT -p udp -m udp -s "${var.masters_subnet_cidr}" -j ACCEPT
+-A INPUT -p ipip -s "${var.masters_subnet_cidr}" -j ACCEPT
 # Allow workers to talk to masters
 -A INPUT -p tcp -m tcp -s "${var.workers_subnet_cidr}" -j ACCEPT
--A INPUT -p tcp -m udp -s "${var.workers_subnet_cidr}" -j ACCEPT
--A INPUT -p tcp -m ipip -s "${var.workers_subnet_cidr}" -j ACCEPT
+-A INPUT -p udp -m udp -s "${var.workers_subnet_cidr}" -j ACCEPT
+-A INPUT -p ipip -s "${var.workers_subnet_cidr}" -j ACCEPT
 # Allow world to apiservers
 -A INPUT -p tcp -m tcp -s "0.0.0.0/0" --dport 443 -j ACCEPT
 # Allow incoming ICMP for echo replies, unreachable destination messages, and time exceeded
