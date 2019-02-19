@@ -1,6 +1,6 @@
 # tf_kube_matchbox
 
-This terraform module creates configuration to launch a kubernetes cluster taht can be stored in a matchbox server. It's designed to synergise well with [tf_kube_ignition](https://github.com/utilitywarehouse/tf_kube_ignition).
+This terraform module creates configuration to launch a kubernetes cluster that can be stored in a matchbox server. It's designed to synergise well with [tf_kube_ignition](https://github.com/utilitywarehouse/tf_kube_ignition).
 
 ## Input Variables
 
