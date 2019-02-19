@@ -24,8 +24,8 @@ resource "null_resource" "workers" {
 
   triggers {
     name        = "worker-${count.index}.${var.dns_domain}"
-    mac_address = "${element(split(",", var.workers_instances[count.index]), 1)}"
-    disk_type   = "${element(split(",", var.workers_instances[count.index]), 2)}"
+    mac_address = "${element(split(",", var.workers_instances[count.index]), 0)}"
+    disk_type   = "${element(split(",", var.workers_instances[count.index]), 1)}"
   }
 }
 

@@ -25,8 +25,8 @@ resource "null_resource" "masters" {
 
   triggers {
     name        = "master-${count.index}.${var.dns_domain}"
-    mac_address = "${element(split(",", var.masters_instances[count.index]), 1)}"
-    disk_type   = "${element(split(",", var.masters_instances[count.index]), 2)}"
+    mac_address = "${element(split(",", var.masters_instances[count.index]), 0)}"
+    disk_type   = "${element(split(",", var.masters_instances[count.index]), 1)}"
   }
 }
 
