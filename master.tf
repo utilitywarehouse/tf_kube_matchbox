@@ -1,7 +1,6 @@
 resource "matchbox_profile" "master" {
   count  = "${var.masters_instance_count}"
   name   = "master-${count.index}"
-  name   = "master"
   kernel = "http://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz"
 
   initrd = [
