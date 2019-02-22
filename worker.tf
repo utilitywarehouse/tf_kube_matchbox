@@ -14,6 +14,7 @@ resource "matchbox_profile" "worker" {
     "root=LABEL=ROOT",
     "console=tty0",
     "console=ttyS0",
+    "console=ttyS1",
   ]
 
   raw_ignition = "${data.ignition_config.worker.*.rendered[count.index]}"
