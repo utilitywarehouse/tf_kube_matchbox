@@ -89,11 +89,13 @@ data "ignition_config" "worker" {
 
   filesystems = [
     "${data.ignition_filesystem.root.id}",
+    "${data.ignition_filesystem.ceph.id}",
   ]
 
   systemd = ["${concat(
 	    list(
-					data.ignition_systemd_unit.iptables-rule-load.id,
+          data.ignition_systemd_unit.iptables-rule-load.id,
+          data.ignition_systemd_unit.ceph-disk-mounter.id,
 			),
 			var.worker_ignition_systemd,
 	)}"]
@@ -102,6 +104,7 @@ data "ignition_config" "worker" {
 	    list(
           data.ignition_file.worker_hostname.*.id[count.index],
           data.ignition_file.worker_iptables_rules.id,
+          data.ignition_file.format-and-mount.id,
 			),
       var.worker_ignition_files,
   )}"]
