@@ -105,6 +105,8 @@ data "ignition_file" "etcd_iptables_rules" {
 # Allow workers subnet to talk to etcds for metrics
 -A INPUT -p tcp -m tcp -s "${var.workers_subnet_cidr}" --dport 9100 -j ACCEPT
 -A INPUT -p tcp -m tcp -s "${var.workers_subnet_cidr}" --dport 9378 -j ACCEPT
+# Allow docker default subnet to talk to etcds port 2379 for etcdctl-wrapper
+-A INPUT -p tcp -m tcp -s 172.17.0.1/16 --dport 2379 -j ACCEPT
 # Allow incoming ICMP for echo replies, unreachable destination messages, and time exceeded
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 0 -j ACCEPT
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 3 -j ACCEPT
