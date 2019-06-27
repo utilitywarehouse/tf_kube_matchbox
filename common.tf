@@ -4,14 +4,8 @@ data "ignition_disk" "devnvme" {
   wipe_table = true
 
   partition {
-    size   = 100022680 // Approx 50 gigs
     label  = "ROOT"
     number = 1
-  }
-
-  partition {
-    label  = "CEPH"
-    number = 2
   }
 }
 
@@ -21,14 +15,8 @@ data "ignition_disk" "devsda" {
   wipe_table = true
 
   partition {
-    size   = 100022680 // Approx 50 gigs
     label  = "ROOT"
     number = 1
-  }
-
-  partition {
-    label  = "CEPH"
-    number = 2
   }
 }
 
@@ -43,40 +31,13 @@ data "ignition_filesystem" "root" {
   }
 }
 
-data "ignition_filesystem" "ceph" {
-  name = "CEPH"
-
-  mount {
-    device = "/dev/disk/by-partlabel/CEPH"
-    format = "ext4"
-  }
-}
-
-data "template_file" "ceph-disk-mounter" {
-  template = "${file("${path.module}/resources/disk-mounter.service")}"
-
-  vars {
-    script_path = "/opt/bin/format-and-mount"
-    volume_id   = "disk/by-partlabel/CEPH"
-    filesystem  = "ext4"
-    user        = "ceph"
-    group       = "ceph"
-    mountpoint  = "/var/lib/ceph"
-  }
-}
-
-data "ignition_systemd_unit" "ceph-disk-mounter" {
-  name    = "disk-mounter.service"
-  content = "${data.template_file.ceph-disk-mounter.rendered}"
-}
-
 data "ignition_file" "format-and-mount" {
-  mode       = 0755
+  mode       = 493
   filesystem = "root"
   path       = "/opt/bin/format-and-mount"
 
   content {
-    content = "${file("${path.module}/resources/format-and-mount")}"
+    content = file("${path.module}/resources/format-and-mount")
   }
 }
 
@@ -92,4 +53,6 @@ ExecStart=/usr/sbin/iptables-restore /var/lib/iptables/rules-save
 [Install]
 WantedBy=multi-user.target
 EOS
+
 }
+

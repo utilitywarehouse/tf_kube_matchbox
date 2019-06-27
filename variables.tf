@@ -1,5 +1,5 @@
 variable "matchbox_http_endpoint" {
-  type        = "string"
+  type        = string
   description = "Matchbox HTTP read-only endpoint (e.g. http://matchbox.example.com:8080)"
 }
 
@@ -16,12 +16,12 @@ variable "cfssl_mac_address" {
 }
 
 variable "cfssl_ignition_systemd" {
-  type        = "list"
+  type        = list(string)
   description = "The systemd files to provide to the cfssl server."
 }
 
 variable "cfssl_ignition_files" {
-  type        = "list"
+  type        = list(string)
   description = "The ignition files to provide to the cfssl server."
 }
 
@@ -35,7 +35,7 @@ variable "etcd_instance_count" {
 }
 
 variable "etcd_mac_addresses" {
-  type        = "list"
+  type        = list(string)
   description = "Mac address of etcd member nodes"
 }
 
@@ -44,12 +44,12 @@ variable "etcd_subnet_cidr" {
 }
 
 variable "etcd_ignition_systemd" {
-  type        = "list"
+  type        = list(list(string))
   description = "The systemd files to provide to the etcd members."
 }
 
 variable "etcd_ignition_files" {
-  type        = "list"
+  type        = list(list(string))
   description = "The ignition files to provide to the etcd members."
 }
 
@@ -63,17 +63,17 @@ variable "masters_subnet_cidr" {
 }
 
 variable "masters_instances" {
-  type        = "list"
+  type        = list(string)
   description = "master instances list ['<mac_address>,<disk_type>']"
 }
 
 variable "master_ignition_systemd" {
-  type        = "list"
+  type        = list(string)
   description = "The systemd files to provide to master nodes."
 }
 
 variable "master_ignition_files" {
-  type        = "list"
+  type        = list(string)
   description = "The ignition files to provide to master nodes."
 }
 
@@ -82,7 +82,7 @@ variable "workers_instance_count" {
 }
 
 variable "workers_instances" {
-  type        = "list"
+  type        = list(string)
   description = "worker instances list ['<mac_address>,<disk_type>']"
 }
 
@@ -91,13 +91,13 @@ variable "workers_subnet_cidr" {
 }
 
 variable "worker_ignition_systemd" {
-  type        = "list"
-  description = "The systemd files to provide to master nodes."
+  type        = list(string)
+  description = "The systemd files to provide to worker nodes."
 }
 
 variable "worker_ignition_files" {
-  type        = "list"
-  description = "The ignition files to provide to master nodes."
+  type        = list(string)
+  description = "The ignition files to provide to worker nodes."
 }
 
 variable "cluster_subnet" {
