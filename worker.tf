@@ -1,5 +1,5 @@
 resource "matchbox_profile" "worker" {
-  count  = "${var.workers_instance_count}"
+  count  = var.workers_instance_count
   name   = "worker-${count.index}"
   kernel = "http://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz"
 
@@ -16,38 +16,39 @@ resource "matchbox_profile" "worker" {
     "console=ttyS0",
   ]
 
-  raw_ignition = "${data.ignition_config.worker.*.rendered[count.index]}"
+  raw_ignition = data.ignition_config.worker[count.index].rendered
 }
 
 resource "null_resource" "workers" {
-  count = "${var.workers_instance_count}"
+  count = var.workers_instance_count
 
-  triggers {
+  triggers = {
     name        = "worker-${count.index}.${var.dns_domain}"
-    mac_address = "${element(split(",", var.workers_instances[count.index]), 0)}"
-    disk_type   = "${element(split(",", var.workers_instances[count.index]), 1)}"
+    mac_address = element(split(",", var.workers_instances[count.index]), 0)
+    disk_type   = element(split(",", var.workers_instances[count.index]), 1)
   }
 }
 
 // Set a hostname
 data "ignition_file" "worker_hostname" {
-  count      = "${var.workers_instance_count}"
+  count      = var.workers_instance_count
   filesystem = "root"
   path       = "/etc/hostname"
-  mode       = "0644"
+  mode       = 420
 
   content {
     content = <<EOS
 ${null_resource.workers.*.triggers.name[count.index]}
 EOS
+
   }
 }
 
 // Firewall rules via iptables
 data "ignition_file" "worker_iptables_rules" {
   filesystem = "root"
-  path       = "/var/lib/iptables/rules-save"
-  mode       = "0644"
+  path = "/var/lib/iptables/rules-save"
+  mode = 420
 
   content {
     content = <<EOS
@@ -76,36 +77,33 @@ data "ignition_file" "worker_iptables_rules" {
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 11 -j ACCEPT
 COMMIT
 EOS
-  }
+
+}
 }
 
 // Get ignition config from the module
 data "ignition_config" "worker" {
-  count = "${var.workers_instance_count}"
+  count = var.workers_instance_count
 
   disks = [
-    "${null_resource.workers.*.triggers.disk_type[count.index] == "nvme" ? data.ignition_disk.devnvme.id : data.ignition_disk.devsda.id}",
+    null_resource.workers.*.triggers.disk_type[count.index] == "nvme" ? data.ignition_disk.devnvme.id : data.ignition_disk.devsda.id,
   ]
 
   filesystems = [
-    "${data.ignition_filesystem.root.id}",
-    "${data.ignition_filesystem.ceph.id}",
+    data.ignition_filesystem.root.id,
   ]
 
-  systemd = ["${concat(
-	    list(
-          data.ignition_systemd_unit.iptables-rule-load.id,
-          data.ignition_systemd_unit.ceph-disk-mounter.id,
-			),
-			var.worker_ignition_systemd,
-	)}"]
+  systemd = concat(
+    [data.ignition_systemd_unit.iptables-rule-load.id],
+    var.worker_ignition_systemd,
+  )
 
-  files = ["${concat(
-	    list(
-          data.ignition_file.worker_hostname.*.id[count.index],
-          data.ignition_file.worker_iptables_rules.id,
-          data.ignition_file.format-and-mount.id,
-			),
+  files = concat(
+    [
+      data.ignition_file.worker_hostname[count.index].id,
+      data.ignition_file.worker_iptables_rules.id,
+      data.ignition_file.format-and-mount.id,
+    ],
       var.worker_ignition_files,
-  )}"]
+  )
 }

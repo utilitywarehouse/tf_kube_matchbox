@@ -15,7 +15,7 @@ resource "matchbox_profile" "cfssl" {
     "console=ttyS0",
   ]
 
-  raw_ignition = "${data.ignition_config.cfssl.rendered}"
+  raw_ignition = data.ignition_config.cfssl.rendered
 }
 
 data "ignition_disk" "devnvme-cfssl" {
@@ -62,20 +62,21 @@ locals {
 data "ignition_file" "cfssl_hostname" {
   filesystem = "root"
   path       = "/etc/hostname"
-  mode       = "0644"
+  mode       = 420
 
   content {
     content = <<EOS
 ${local.cfssl_dns_name}
 EOS
+
   }
 }
 
 // Firewall rules via iptables
 data "ignition_file" "cfssl_iptables_rules" {
   filesystem = "root"
-  path       = "/var/lib/iptables/rules-save"
-  mode       = "0644"
+  path = "/var/lib/iptables/rules-save"
+  mode = 420
 
   content {
     content = <<EOS
@@ -107,32 +108,32 @@ data "ignition_file" "cfssl_iptables_rules" {
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 11 -j ACCEPT
 COMMIT
 EOS
-  }
+
+}
 }
 
 // Get ignition config from the module
 data "ignition_config" "cfssl" {
   disks = [
-    "${data.ignition_disk.devnvme-cfssl.id}",
+    data.ignition_disk.devnvme-cfssl.id,
   ]
 
   filesystems = [
-    "${data.ignition_filesystem.root-cfssl.id}",
-    "${data.ignition_filesystem.cfssl.id}",
+    data.ignition_filesystem.root-cfssl.id,
+    data.ignition_filesystem.cfssl.id,
   ]
 
-  systemd = ["${concat(
-	    list(
-          data.ignition_systemd_unit.iptables-rule-load.id,
-			),
-			var.cfssl_ignition_systemd,
-	)}"]
+  systemd = concat(
+    [data.ignition_systemd_unit.iptables-rule-load.id],
+    var.cfssl_ignition_systemd,
+  )
 
-  files = ["${concat(
-	    list(
-          data.ignition_file.cfssl_hostname.id,
-          data.ignition_file.cfssl_iptables_rules.id,
-			),
+  files = concat(
+    [
+      data.ignition_file.cfssl_hostname.id,
+      data.ignition_file.cfssl_iptables_rules.id,
+    ],
       var.cfssl_ignition_files,
-  )}"]
+  )
 }
+
