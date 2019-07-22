@@ -67,10 +67,10 @@ data "ignition_file" "worker_iptables_rules" {
 -A INPUT -p tcp -m tcp -s "${var.masters_subnet_cidr}" -j ACCEPT
 -A INPUT -p udp -m udp -s "${var.masters_subnet_cidr}" -j ACCEPT
 -A INPUT -p ipip -s "${var.masters_subnet_cidr}" -j ACCEPT
-# Allow workers to talk
--A INPUT -p tcp -m tcp -s "${var.workers_subnet_cidr}" -j ACCEPT
--A INPUT -p udp -m udp -s "${var.workers_subnet_cidr}" -j ACCEPT
--A INPUT -p ipip -s "${var.workers_subnet_cidr}" -j ACCEPT
+# Allow nodes to talk
+-A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" -j ACCEPT
+-A INPUT -p udp -m udp -s "${var.nodes_subnet_cidr}" -j ACCEPT
+-A INPUT -p ipip -s "${var.nodes_subnet_cidr}" -j ACCEPT
 # Allow incoming ICMP for echo replies, unreachable destination messages, and time exceeded
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 0 -j ACCEPT
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 3 -j ACCEPT
@@ -102,7 +102,6 @@ data "ignition_config" "worker" {
     [
       data.ignition_file.worker_hostname[count.index].id,
       data.ignition_file.worker_iptables_rules.id,
-      data.ignition_file.format-and-mount.id,
     ],
       var.worker_ignition_files,
   )

@@ -19,13 +19,17 @@ resource "matchbox_profile" "etcd" {
   raw_ignition = data.ignition_config.etcd[count.index].rendered
 }
 
+variable "etcd-partlabel" {
+  default = "ETCD"
+}
+
 data "ignition_disk" "devnvme-etcd" {
   device     = "/dev/nvme0n1"
   wipe_table = true
 
   partition {
     size   = 50011340 // Approx 25 gigs
-    label  = "ETCD"
+    label  = var.etcd-partlabel
     number = 1
   }
 
@@ -50,10 +54,19 @@ data "ignition_filesystem" "etcd" {
   name = "etcd"
 
   mount {
-    device = "/dev/disk/by-partlabel/ETCD"
+    device = "/dev/disk/by-partlabel/${var.etcd-partlabel}"
     format = "ext4"
   }
 }
+
+resource "null_resource" "etcd_partlabels" {
+  count = var.etcd_instance_count
+
+  triggers = {
+    label = "/dev/disk/by-partlabel/${var.etcd-partlabel}"
+  }
+}
+
 
 resource "null_resource" "etcd_hostnames" {
   count = var.etcd_instance_count
@@ -103,9 +116,9 @@ data "ignition_file" "etcd_iptables_rules" {
 # Allow masters subnet to talk to etcds
 -A INPUT -p tcp -m tcp -s "${var.masters_subnet_cidr}" --dport 2379 -j ACCEPT
 -A INPUT -p tcp -m tcp -s "${var.masters_subnet_cidr}" --dport 2380 -j ACCEPT
-# Allow workers subnet to talk to etcds for metrics
--A INPUT -p tcp -m tcp -s "${var.workers_subnet_cidr}" --dport 9100 -j ACCEPT
--A INPUT -p tcp -m tcp -s "${var.workers_subnet_cidr}" --dport 9378 -j ACCEPT
+# Allow nodes subnet to talk to etcds for metrics
+-A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 9100 -j ACCEPT
+-A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 9378 -j ACCEPT
 # Allow docker default subnet to talk to etcds port 2379 for etcdctl-wrapper
 -A INPUT -p tcp -m tcp -s 172.17.0.1/16 --dport 2379 -j ACCEPT
 # Allow incoming ICMP for echo replies, unreachable destination messages, and time exceeded

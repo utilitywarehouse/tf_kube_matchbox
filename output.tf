@@ -13,3 +13,19 @@ output "master_dns_names" {
 output "worker_dns_names" {
   value = null_resource.workers.*.triggers.name
 }
+
+output "storage_node_dns_names" {
+  value = null_resource.storage-nodes.*.triggers.name
+}
+
+output "cfssl_data_volumeid" {
+  value = "/dev/disk/by-partlabel/${var.cfssl-partlabel}"
+}
+
+output "etcd_data_volumeids" {
+  value = null_resource.etcd_partlabels.*.triggers.label
+}
+
+output "storage_node_volumeid" {
+  value = "/dev/disk/by-partlabel/${var.storage-node-partlabel}"
+}
