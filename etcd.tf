@@ -63,7 +63,7 @@ resource "null_resource" "etcd_partlabels" {
   count = var.etcd_instance_count
 
   triggers = {
-    label = "/dev/disk/by-partlabel/${var.etcd-partlabel}"
+    label = "disk/by-partlabel/${var.etcd-partlabel}"
   }
 }
 

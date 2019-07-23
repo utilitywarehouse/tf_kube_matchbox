@@ -19,7 +19,7 @@ output "storage_node_dns_names" {
 }
 
 output "cfssl_data_volumeid" {
-  value = "/dev/disk/by-partlabel/${var.cfssl-partlabel}"
+  value = "disk/by-partlabel/${var.cfssl-partlabel}"
 }
 
 output "etcd_data_volumeids" {
@@ -27,5 +27,5 @@ output "etcd_data_volumeids" {
 }
 
 output "storage_node_volumeid" {
-  value = "/dev/disk/by-partlabel/${var.storage-node-partlabel}"
+  value = "disk/by-partlabel/${var.storage-node-partlabel}"
 }
