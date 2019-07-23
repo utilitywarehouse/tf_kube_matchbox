@@ -1,6 +1,6 @@
-resource "matchbox_profile" "master" {
-  count  = var.masters_instance_count
-  name   = "master-${count.index}"
+resource "matchbox_profile" "storage-node" {
+  count  = var.storage_node_count
+  name   = "storage-node-${count.index}"
   kernel = "http://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz"
 
   initrd = [
@@ -16,36 +16,81 @@ resource "matchbox_profile" "master" {
     "console=ttyS0",
   ]
 
-  raw_ignition = data.ignition_config.master[count.index].rendered
+  raw_ignition = data.ignition_config.storage-node[count.index].rendered
 }
 
-resource "null_resource" "masters" {
-  count = var.masters_instance_count
+variable "storage-node-partlabel" {
+  default = "STORAGE_DEVICE"
+}
+
+data "ignition_disk" "devnvme-storage-node" {
+  device     = "/dev/nvme0n1"
+  wipe_table = true
+
+  partition {
+    size   = 100022680 // Approx 50 gigs
+    label  = "ROOT"
+    number = 1
+  }
+
+  partition {
+    label  = var.storage-node-partlabel
+    number = 2
+  }
+}
+
+data "ignition_disk" "devsda-storage-node" {
+  device     = "/dev/sda"
+  wipe_table = true
+
+  partition {
+    size   = 100022680 // Approx 50 gigs
+    label  = "ROOT"
+    number = 1
+  }
+
+  partition {
+    label  = var.storage-node-partlabel
+    number = 2
+  }
+}
+
+data "ignition_filesystem" "storage-device" {
+  name = "STORAGE_DEVICE"
+
+  mount {
+    device = "/dev/disk/by-partlabel/${var.storage-node-partlabel}"
+    format = "ext4"
+  }
+}
+
+resource "null_resource" "storage-nodes" {
+  count = var.storage_node_count
 
   triggers = {
-    name        = "master-${count.index}.${var.dns_domain}"
-    mac_address = element(split(",", var.masters_instances[count.index]), 0)
-    disk_type   = element(split(",", var.masters_instances[count.index]), 1)
+    name        = "storage-node-${count.index}.${var.dns_domain}"
+    mac_address = element(split(",", var.storage_nodes[count.index]), 0)
+    disk_type   = element(split(",", var.storage_nodes[count.index]), 1)
   }
 }
 
 // Set a hostname
-data "ignition_file" "master_hostname" {
-  count      = var.masters_instance_count
+data "ignition_file" "storage_node_hostname" {
+  count      = var.storage_node_count
   filesystem = "root"
   path       = "/etc/hostname"
   mode       = 420
 
   content {
     content = <<EOS
-${null_resource.masters.*.triggers.name[count.index]}
+${null_resource.storage-nodes.*.triggers.name[count.index]}
 EOS
 
   }
 }
 
 // Firewall rules via iptables
-data "ignition_file" "master_iptables_rules" {
+data "ignition_file" "storage_node_iptables_rules" {
   filesystem = "root"
   path = "/var/lib/iptables/rules-save"
   mode = 420
@@ -63,16 +108,14 @@ data "ignition_file" "master_iptables_rules" {
 -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 # Allow ssh from jumpbox
 -A INPUT -p tcp -m tcp -s "${var.ssh_address_range}" --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-# Allow masters to talk
+# Allow masters to talk to workers
 -A INPUT -p tcp -m tcp -s "${var.masters_subnet_cidr}" -j ACCEPT
 -A INPUT -p udp -m udp -s "${var.masters_subnet_cidr}" -j ACCEPT
 -A INPUT -p ipip -s "${var.masters_subnet_cidr}" -j ACCEPT
-# Allow nodes to talk to masters
+# Allow nodes to talk
 -A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" -j ACCEPT
 -A INPUT -p udp -m udp -s "${var.nodes_subnet_cidr}" -j ACCEPT
 -A INPUT -p ipip -s "${var.nodes_subnet_cidr}" -j ACCEPT
-# Allow world to apiservers
--A INPUT -p tcp -m tcp -s "0.0.0.0/0" --dport 443 -j ACCEPT
 # Allow incoming ICMP for echo replies, unreachable destination messages, and time exceeded
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 0 -j ACCEPT
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 3 -j ACCEPT
@@ -83,28 +126,28 @@ EOS
 }
 }
 
-// Get ignition config from the module
-data "ignition_config" "master" {
-  count = var.masters_instance_count
+data "ignition_config" "storage-node" {
+  count = var.storage_node_count
 
   disks = [
-    null_resource.masters.*.triggers.disk_type[count.index] == "nvme" ? data.ignition_disk.devnvme.id : data.ignition_disk.devsda.id,
+    null_resource.storage-nodes.*.triggers.disk_type[count.index] == "nvme" ? data.ignition_disk.devnvme-storage-node.id : data.ignition_disk.devsda-storage-node.id,
   ]
 
   filesystems = [
     data.ignition_filesystem.root.id,
+    data.ignition_filesystem.storage-device.id,
   ]
 
   systemd = concat(
     [data.ignition_systemd_unit.iptables-rule-load.id],
-    var.master_ignition_systemd,
+    var.storage_node_ignition_systemd,
   )
 
   files = concat(
     [
-      data.ignition_file.master_hostname[count.index].id,
-      data.ignition_file.master_iptables_rules.id,
+      data.ignition_file.storage_node_hostname[count.index].id,
+      data.ignition_file.storage_node_iptables_rules.id,
     ],
-      var.master_ignition_files,
+      var.storage_node_ignition_files,
   )
 }

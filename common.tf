@@ -31,16 +31,6 @@ data "ignition_filesystem" "root" {
   }
 }
 
-data "ignition_file" "format-and-mount" {
-  mode       = 493
-  filesystem = "root"
-  path       = "/opt/bin/format-and-mount"
-
-  content {
-    content = file("${path.module}/resources/format-and-mount")
-  }
-}
-
 data "ignition_systemd_unit" "iptables-rule-load" {
   name = "iptables-rule-load.service"
 

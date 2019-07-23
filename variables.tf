@@ -86,10 +86,6 @@ variable "workers_instances" {
   description = "worker instances list ['<mac_address>,<disk_type>']"
 }
 
-variable "workers_subnet_cidr" {
-  description = "Address range for worker nodes"
-}
-
 variable "worker_ignition_systemd" {
   type        = list(string)
   description = "The systemd files to provide to worker nodes."
@@ -99,6 +95,31 @@ variable "worker_ignition_files" {
   type        = list(string)
   description = "The ignition files to provide to worker nodes."
 }
+
+variable "storage_node_count" {
+  description = "storage nodes count"
+}
+
+variable "storage_nodes" {
+  type        = list(string)
+  description = "storage nodes list ['<mac_address>,<disk_type>']"
+}
+
+variable "storage_node_ignition_systemd" {
+  type        = list(string)
+  description = "The systemd files to provide to storage nodes."
+}
+
+variable "storage_node_ignition_files" {
+  type        = list(string)
+  description = "The ignition files to provide to storage nodes."
+}
+
+variable "nodes_subnet_cidr" {
+  description = "Address range for kube slave nodes"
+}
+
+
 
 variable "cluster_subnet" {
   description = "Cluster ip subnet"

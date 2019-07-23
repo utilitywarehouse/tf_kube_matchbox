@@ -18,13 +18,17 @@ resource "matchbox_profile" "cfssl" {
   raw_ignition = data.ignition_config.cfssl.rendered
 }
 
+variable "cfssl-partlabel" {
+  default = "CFSSL"
+}
+
 data "ignition_disk" "devnvme-cfssl" {
   device     = "/dev/nvme0n1"
   wipe_table = true
 
   partition {
     size   = 12502835 // Approx 5 gigs
-    label  = "CFSSL"
+    label  = var.cfssl-partlabel
     number = 1
   }
 
@@ -49,7 +53,7 @@ data "ignition_filesystem" "cfssl" {
   name = "cfssl"
 
   mount {
-    device = "/dev/disk/by-partlabel/CFSSL"
+    device = "/dev/disk/by-partlabel/${var.cfssl-partlabel}"
     format = "ext4"
   }
 }
@@ -97,11 +101,11 @@ data "ignition_file" "cfssl_iptables_rules" {
 # Allow masters subnet to talk to cffsl
 -A INPUT -p tcp -m tcp -s "${var.masters_subnet_cidr}" --dport 8888 -j ACCEPT
 -A INPUT -p tcp -m tcp -s "${var.masters_subnet_cidr}" --dport 8889 -j ACCEPT
-# Allow workers subnet to talk to etcds for metrics
--A INPUT -p tcp -m tcp -s "${var.workers_subnet_cidr}" --dport 8888 -j ACCEPT
--A INPUT -p tcp -m tcp -s "${var.workers_subnet_cidr}" --dport 8889 -j ACCEPT
+# Allow nodes subnet to talk to etcds for metrics
+-A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 8888 -j ACCEPT
+-A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 8889 -j ACCEPT
 # Allow workers subnet to talk to node exporter
--A INPUT -p tcp -m tcp -s "${var.workers_subnet_cidr}" --dport 9100 -j ACCEPT
+-A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 9100 -j ACCEPT
 # Allow incoming ICMP for echo replies, unreachable destination messages, and time exceeded
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 0 -j ACCEPT
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 3 -j ACCEPT

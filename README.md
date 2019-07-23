@@ -40,7 +40,7 @@ module "cluster" {
   master_ignition_files   = "${module.ignition.master_ignition_files}"
   workers_instance_count  = 2
   workers_instances       = ["XX:XX:XX:XX:XX:XX,nvme", "XX:XX:XX:XX:XX:XX,sda"]
-  workers_subnet_cidr     = "10.88.0.128/25"
+  nodes_subnet_cidr       = "10.88.0.128/25"
   worker_ignition_systemd = "${module.ignition.worker_ignition_systemd}"
   worker_ignition_files   = "${module.ignition.worker_ignition_files}"
 }
