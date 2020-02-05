@@ -23,8 +23,8 @@ variable "etcd-partlabel" {
   default = "ETCD"
 }
 
-data "ignition_disk" "devnvme-etcd" {
-  device     = "/dev/nvme0n1"
+data "ignition_disk" "etcd-sda" {
+  device     = "/dev/sda"
   wipe_table = true
 
   partition {
@@ -136,7 +136,7 @@ data "ignition_config" "etcd" {
   count = var.etcd_instance_count
 
   disks = [
-    data.ignition_disk.devnvme-etcd.id,
+    data.ignition_disk.etcd-sda.id,
   ]
 
   filesystems = [

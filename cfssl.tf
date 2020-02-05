@@ -22,8 +22,8 @@ variable "cfssl-partlabel" {
   default = "CFSSL"
 }
 
-data "ignition_disk" "devnvme-cfssl" {
-  device     = "/dev/nvme0n1"
+data "ignition_disk" "cfssl-sda" {
+  device     = "/dev/sda"
   wipe_table = true
 
   partition {
@@ -119,7 +119,7 @@ EOS
 // Get ignition config from the module
 data "ignition_config" "cfssl" {
   disks = [
-    data.ignition_disk.devnvme-cfssl.id,
+    data.ignition_disk.cfssl-sda.id,
   ]
 
   filesystems = [
