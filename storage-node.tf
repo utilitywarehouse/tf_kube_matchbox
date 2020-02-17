@@ -89,11 +89,51 @@ EOS
   }
 }
 
+// Bond interfaces
+data "ignition_networkd_unit" "storage_node_enp" {
+  name    = "00-enp.network"
+  content = <<EOS
+[Match]
+Name=enp*
+
+[Network]
+Bond=bond0
+EOS
+}
+
+data "ignition_networkd_unit" "storage_node_bond_netdev" {
+  name    = "10-bond0.netdev"
+  content = <<EOS
+[NetDev]
+Name=bond0
+Kind=bond
+
+[Bond]
+Mode=802.3ad
+EOS
+}
+
+data "ignition_networkd_unit" "storage_node_bond0" {
+  count   = var.storage_node_count
+  name    = "20-bond0.network"
+  content = <<EOS
+[Match]
+Name=bond0
+
+[Link]
+MACAddress=${null_resource.storage-nodes.*.triggers.mac_address[count.index]}
+
+[Network]
+DHCP=true
+EOS
+
+}
+
 // Firewall rules via iptables
 data "ignition_file" "storage_node_iptables_rules" {
   filesystem = "root"
-  path = "/var/lib/iptables/rules-save"
-  mode = 420
+  path       = "/var/lib/iptables/rules-save"
+  mode       = 420
 
   content {
     content = <<EOS
@@ -123,7 +163,7 @@ data "ignition_file" "storage_node_iptables_rules" {
 COMMIT
 EOS
 
-}
+  }
 }
 
 data "ignition_config" "storage-node" {
@@ -138,6 +178,12 @@ data "ignition_config" "storage-node" {
     data.ignition_filesystem.storage-device.id,
   ]
 
+  networkd = [
+    data.ignition_networkd_unit.storage_node_enp.id,
+    data.ignition_networkd_unit.storage_node_bond_netdev.id,
+    data.ignition_networkd_unit.storage_node_bond0[count.index].id,
+  ]
+
   systemd = concat(
     [data.ignition_systemd_unit.iptables-rule-load.id],
     var.storage_node_ignition_systemd,
@@ -148,6 +194,6 @@ data "ignition_config" "storage-node" {
       data.ignition_file.storage_node_hostname[count.index].id,
       data.ignition_file.storage_node_iptables_rules.id,
     ],
-      var.storage_node_ignition_files,
+    var.storage_node_ignition_files,
   )
 }

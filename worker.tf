@@ -44,11 +44,52 @@ EOS
   }
 }
 
+// Bond interfaces
+data "ignition_networkd_unit" "worker_en" {
+  name    = "00-enp.network"
+  content = <<EOS
+[Match]
+Name=eno*
+
+[Network]
+Bond=bond0
+EOS
+}
+
+data "ignition_networkd_unit" "worker_bond_netdev" {
+  name    = "10-bond0.netdev"
+  content = <<EOS
+[NetDev]
+Name=bond0
+Kind=bond
+
+[Bond]
+Mode=802.3ad
+EOS
+}
+
+data "ignition_networkd_unit" "worker_bond0" {
+  count   = var.storage_node_count
+  name    = "20-bond0.network"
+  content = <<EOS
+[Match]
+Name=bond0
+
+[Link]
+MACAddress=${null_resource.storage-nodes.*.triggers.mac_address[count.index]}
+
+[Network]
+DHCP=true
+EOS
+
+}
+
+
 // Firewall rules via iptables
 data "ignition_file" "worker_iptables_rules" {
   filesystem = "root"
-  path = "/var/lib/iptables/rules-save"
-  mode = 420
+  path       = "/var/lib/iptables/rules-save"
+  mode       = 420
 
   content {
     content = <<EOS
@@ -78,7 +119,7 @@ data "ignition_file" "worker_iptables_rules" {
 COMMIT
 EOS
 
-}
+  }
 }
 
 // Get ignition config from the module
@@ -93,6 +134,12 @@ data "ignition_config" "worker" {
     data.ignition_filesystem.root.id,
   ]
 
+  networkd = [
+    data.ignition_networkd_unit.worker_eno.id,
+    data.ignition_networkd_unit.worker_bond_netdev.id,
+    data.ignition_networkd_unit.worker_bond0[count.index].id,
+  ]
+
   systemd = concat(
     [data.ignition_systemd_unit.iptables-rule-load.id],
     var.worker_ignition_systemd,
@@ -103,6 +150,6 @@ data "ignition_config" "worker" {
       data.ignition_file.worker_hostname[count.index].id,
       data.ignition_file.worker_iptables_rules.id,
     ],
-      var.worker_ignition_files,
+    var.worker_ignition_files,
   )
 }
