@@ -1,16 +1,16 @@
 resource "matchbox_profile" "worker" {
   count  = var.workers_instance_count
   name   = "worker-${count.index}"
-  kernel = "http://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe.vmlinuz"
+  kernel = "http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe.vmlinuz"
 
   initrd = [
-    "http://stable.release.core-os.net/amd64-usr/current/coreos_production_pxe_image.cpio.gz",
+    "http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe_image.cpio.gz",
   ]
 
   args = [
-    "initrd=coreos_production_pxe_image.cpio.gz",
-    "coreos.config.url=${var.matchbox_http_endpoint}/ignition?uuid=$${uuid}&mac=$${mac:hexhyp}",
-    "coreos.first_boot=yes",
+    "initrd=flatcar_production_pxe_image.cpio.gz",
+    "ignition.config.url=${var.matchbox_http_endpoint}/ignition?uuid=$${uuid}&mac=$${mac:hexhyp}",
+    "flatcar.first_boot=yes",
     "root=LABEL=ROOT",
     "console=tty0",
     "console=ttyS0",
