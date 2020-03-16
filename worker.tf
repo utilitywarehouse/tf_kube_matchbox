@@ -29,7 +29,7 @@ resource "null_resource" "workers" {
   }
 }
 
-// Set a hostname
+# Set a hostname
 data "ignition_file" "worker_hostname" {
   count      = var.workers_instance_count
   filesystem = "root"
@@ -44,11 +44,28 @@ EOS
   }
 }
 
-// Firewall rules via iptables
+# Create bond interface and override the generated mac with the one from the
+# worker config
+data "ignition_networkd_unit" "worker_bond0" {
+  count   = var.workers_instance_count
+  name    = "20-bond0.network"
+  content = <<EOS
+[Match]
+Name=bond0
+
+[Link]
+MACAddress=${null_resource.workers.*.triggers.mac_address[count.index]}
+
+[Network]
+DHCP=true
+EOS
+}
+
+# Firewall rules via iptables
 data "ignition_file" "worker_iptables_rules" {
   filesystem = "root"
-  path = "/var/lib/iptables/rules-save"
-  mode = 420
+  path       = "/var/lib/iptables/rules-save"
+  mode       = 420
 
   content {
     content = <<EOS
@@ -78,15 +95,21 @@ data "ignition_file" "worker_iptables_rules" {
 COMMIT
 EOS
 
-}
+  }
 }
 
-// Get ignition config from the module
+# Get ignition config from the module
 data "ignition_config" "worker" {
   count = var.workers_instance_count
 
   disks = [
     null_resource.workers.*.triggers.disk_type[count.index] == "nvme" ? data.ignition_disk.devnvme.id : data.ignition_disk.devsda.id,
+  ]
+
+  networkd = [
+    data.ignition_networkd_unit.bond_net_eno.id,
+    data.ignition_networkd_unit.bond_netdev.id,
+    data.ignition_networkd_unit.worker_bond0[count.index].id,
   ]
 
   filesystems = [
@@ -103,6 +126,6 @@ data "ignition_config" "worker" {
       data.ignition_file.worker_hostname[count.index].id,
       data.ignition_file.worker_iptables_rules.id,
     ],
-      var.worker_ignition_files,
+    var.worker_ignition_files,
   )
 }

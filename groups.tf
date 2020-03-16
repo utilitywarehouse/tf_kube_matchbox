@@ -1,3 +1,8 @@
+# Looks like we cannot have more than one mac addresses per group:
+# https://github.com/poseidon/matchbox/issues/586
+# that means that for additional NICs we will need to create separate backup
+# groups
+
 resource "matchbox_group" "cfssl" {
   name    = "cfssl"
   profile = matchbox_profile.cfssl.name
@@ -46,6 +51,20 @@ resource "matchbox_group" "worker" {
 
   selector = {
     mac = null_resource.workers.*.triggers.mac_address[count.index]
+  }
+
+  metadata = {
+    ignition_endpoint = "${var.matchbox_http_endpoint}/ignition"
+  }
+}
+
+resource "matchbox_group" "worker_additional_nic" {
+  count   = var.workers_instance_count
+  name    = "worker-${count.index}"
+  profile = matchbox_profile.worker[count.index].name
+
+  selector = {
+    mac = var.workers_additional_nics[count.index]
   }
 
   metadata = {

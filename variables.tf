@@ -86,6 +86,11 @@ variable "workers_instances" {
   description = "worker instances list ['<mac_address>,<disk_type>']"
 }
 
+variable "workers_additional_nics" {
+  type        = list(string)
+  description = "list of additional nic mac addresses for worker instances. One per instance"
+}
+
 variable "worker_ignition_systemd" {
   type        = list(string)
   description = "The systemd files to provide to worker nodes."
