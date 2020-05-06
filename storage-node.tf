@@ -100,7 +100,6 @@ data "ignition_file" "storage_node_iptables_rules" {
 *filter
 # Default Policies: Drop all incoming and forward attempts, allow outgoing
 :INPUT DROP [0:0]
-:FORWARD DROP [0:0]
 :OUTPUT ACCEPT [0:0]
 # Allow eveything on localhost
 -A INPUT -i lo -j ACCEPT
