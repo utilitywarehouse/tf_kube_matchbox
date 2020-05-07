@@ -53,7 +53,7 @@ data "ignition_file" "master_iptables_rules" {
   content {
     content = <<EOS
 *filter
-# Default Policies: Drop all incoming and forward attempts, allow outgoing
+# Default Policies: Drop all incoming attempts, allow outgoing
 :INPUT DROP [0:0]
 :OUTPUT ACCEPT [0:0]
 # Allow eveything on localhost
@@ -62,6 +62,8 @@ data "ignition_file" "master_iptables_rules" {
 -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 # Allow ssh from jumpbox
 -A INPUT -p tcp -m tcp -s "${var.ssh_address_range}" --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+# Allow pod subnet input https://github.com/kubernetes/kubeadm/issues/1461#issuecomment-489362994
+-A INPUT -s "${var.pod_network}" -j ACCEPT
 # Allow masters to talk
 -A INPUT -p tcp -m tcp -s "${var.masters_subnet_cidr}" -j ACCEPT
 -A INPUT -p udp -m udp -s "${var.masters_subnet_cidr}" -j ACCEPT
