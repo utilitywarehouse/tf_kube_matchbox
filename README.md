@@ -23,6 +23,7 @@ module "cluster" {
   matchbox_http_endpoint  = "http://matchbox.example.com:8080"
   dns_domain              = "example.com"
   cluster_subnet          = "10.88.0.0/24"
+  pod_network             = "10.6.0.0/16"
   ssh_address_range       = "10.91.0.0/24"
   cfssl_address           = "10.88.0.8"
   cfssl_mac_address       = "XX:XX:XX:XX:XX:XX"

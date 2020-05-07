@@ -119,8 +119,10 @@ variable "nodes_subnet_cidr" {
   description = "Address range for kube slave nodes"
 }
 
-
-
 variable "cluster_subnet" {
   description = "Cluster ip subnet"
+}
+
+variable "pod_network" {
+  description = "pod network cidr"
 }
