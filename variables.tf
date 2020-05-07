@@ -123,6 +123,10 @@ variable "cluster_subnet" {
   description = "Cluster ip subnet"
 }
 
+variable "cluster_internal_svc_subnet" {
+  description = "Advertised ip subnet for internal services"
+}
+
 variable "pod_network" {
   description = "pod network cidr"
 }
