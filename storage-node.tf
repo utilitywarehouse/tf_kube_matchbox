@@ -108,6 +108,8 @@ data "ignition_file" "storage_node_iptables_rules" {
 # Allow ssh from jumpbox
 -A INPUT -p tcp -m tcp -s "${var.ssh_address_range}" --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
 # Allow pod subnet input https://github.com/kubernetes/kubeadm/issues/1461#issuecomment-489362994
+# This also creates a default accept policy for traffic initiated from pods.
+# Careful to only use this with calico felix ChainInsertMode set to Insert, otherwise the Calico policies will be bypassed
 -A INPUT -s "${var.pod_network}" -j ACCEPT
 # Allow packets destined to internal services ip range
 -A INPUT -d "${var.cluster_internal_svc_subnet}" -j ACCEPT
