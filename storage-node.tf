@@ -89,48 +89,6 @@ EOS
   }
 }
 
-// Firewall rules via iptables
-data "ignition_file" "storage_node_iptables_rules" {
-  filesystem = "root"
-  path = "/var/lib/iptables/rules-save"
-  mode = 420
-
-  content {
-    content = <<EOS
-*filter
-# Default Policies: Drop all incoming attempts, allow outgoing
-:INPUT DROP [0:0]
-:OUTPUT ACCEPT [0:0]
-# Allow eveything on localhost
--A INPUT -i lo -j ACCEPT
-# Allow all connections initiated by the host
--A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-# Allow ssh from jumpbox
--A INPUT -p tcp -m tcp -s "${var.ssh_address_range}" --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-# Allow pod subnet input https://github.com/kubernetes/kubeadm/issues/1461#issuecomment-489362994
-# This also creates a default accept policy for traffic initiated from pods.
-# Careful to only use this with calico felix ChainInsertMode set to Insert, otherwise the Calico policies will be bypassed
--A INPUT -s "${var.pod_network}" -j ACCEPT
-# Allow packets destined to internal services ip range
--A INPUT -d "${var.cluster_internal_svc_subnet}" -j ACCEPT
-# Allow masters to talk to workers
--A INPUT -p tcp -m tcp -s "${var.masters_subnet_cidr}" -j ACCEPT
--A INPUT -p udp -m udp -s "${var.masters_subnet_cidr}" -j ACCEPT
--A INPUT -p ipip -s "${var.masters_subnet_cidr}" -j ACCEPT
-# Allow nodes to talk
--A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" -j ACCEPT
--A INPUT -p udp -m udp -s "${var.nodes_subnet_cidr}" -j ACCEPT
--A INPUT -p ipip -s "${var.nodes_subnet_cidr}" -j ACCEPT
-# Allow incoming ICMP for echo replies, unreachable destination messages, and time exceeded
--A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 0 -j ACCEPT
--A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 3 -j ACCEPT
--A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 11 -j ACCEPT
-COMMIT
-EOS
-
-}
-}
-
 data "ignition_config" "storage-node" {
   count = var.storage_node_count
 
@@ -144,14 +102,12 @@ data "ignition_config" "storage-node" {
   ]
 
   systemd = concat(
-    [data.ignition_systemd_unit.iptables-rule-load.id],
     var.storage_node_ignition_systemd,
   )
 
   files = concat(
     [
       data.ignition_file.storage_node_hostname[count.index].id,
-      data.ignition_file.storage_node_iptables_rules.id,
     ],
       var.storage_node_ignition_files,
   )
