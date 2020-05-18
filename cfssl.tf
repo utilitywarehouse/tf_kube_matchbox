@@ -79,8 +79,8 @@ EOS
 // Firewall rules via iptables
 data "ignition_file" "cfssl_iptables_rules" {
   filesystem = "root"
-  path = "/var/lib/iptables/rules-save"
-  mode = 420
+  path       = "/var/lib/iptables/rules-save"
+  mode       = 420
 
   content {
     content = <<EOS
@@ -106,6 +106,8 @@ data "ignition_file" "cfssl_iptables_rules" {
 -A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 8889 -j ACCEPT
 # Allow workers subnet to talk to node exporter
 -A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 9100 -j ACCEPT
+# Allow nodes subnet to talk to fluent-bit exporter for metrics
+-A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 8080 -j ACCEPT
 # Allow incoming ICMP for echo replies, unreachable destination messages, and time exceeded
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 0 -j ACCEPT
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 3 -j ACCEPT
@@ -113,7 +115,7 @@ data "ignition_file" "cfssl_iptables_rules" {
 COMMIT
 EOS
 
-}
+  }
 }
 
 // Get ignition config from the module
@@ -137,7 +139,7 @@ data "ignition_config" "cfssl" {
       data.ignition_file.cfssl_hostname.id,
       data.ignition_file.cfssl_iptables_rules.id,
     ],
-      var.cfssl_ignition_files,
+    var.cfssl_ignition_files,
   )
 }
 
