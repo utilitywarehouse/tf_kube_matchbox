@@ -109,6 +109,10 @@ data "ignition_config" "storage-node" {
     [
       data.ignition_file.storage_node_hostname[count.index].id,
     ],
-      var.storage_node_ignition_files,
+    var.storage_node_ignition_files,
   )
+
+  directories = [
+    data.ignition_directory.journald.id
+  ]
 }

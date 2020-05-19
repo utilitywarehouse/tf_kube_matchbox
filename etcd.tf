@@ -158,5 +158,9 @@ data "ignition_config" "etcd" {
     ],
     var.etcd_ignition_files[count.index],
   )
+
+  directories = [
+    data.ignition_directory.journald.id
+  ]
 }
 

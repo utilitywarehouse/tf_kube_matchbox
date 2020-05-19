@@ -141,5 +141,8 @@ data "ignition_config" "cfssl" {
     ],
     var.cfssl_ignition_files,
   )
-}
 
+  directories = [
+    data.ignition_directory.journald.id
+  ]
+}
