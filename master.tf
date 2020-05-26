@@ -64,6 +64,8 @@ data "ignition_config" "master" {
     [
       data.ignition_file.master_hostname[count.index].id,
     ],
-      var.master_ignition_files,
+    var.master_ignition_files,
   )
+
+  directories = var.master_ignition_directories
 }

@@ -25,6 +25,11 @@ variable "cfssl_ignition_files" {
   description = "The ignition files to provide to the cfssl server."
 }
 
+variable "cfssl_ignition_directories" {
+  type        = list(string)
+  description = "The ignition directories to provide to the cfssl server."
+}
+
 variable "ssh_address_range" {
   description = "Address range from which to allow ssh"
 }
@@ -53,6 +58,11 @@ variable "etcd_ignition_files" {
   description = "The ignition files to provide to the etcd members."
 }
 
+variable "etcd_ignition_directories" {
+  type        = list(list(string))
+  description = "The ignition directories to provide to the etcd members."
+}
+
 variable "masters_instance_count" {
   default     = 3
   description = "master nodes count"
@@ -77,6 +87,11 @@ variable "master_ignition_files" {
   description = "The ignition files to provide to master nodes."
 }
 
+variable "master_ignition_directories" {
+  type        = list(string)
+  description = "The ignition directories to provide to master nodes."
+}
+
 variable "workers_instance_count" {
   description = "worker nodes count"
 }
@@ -96,6 +111,11 @@ variable "worker_ignition_files" {
   description = "The ignition files to provide to worker nodes."
 }
 
+variable "worker_ignition_directories" {
+  type        = list(string)
+  description = "The ignition directories to provide to worker nodes."
+}
+
 variable "storage_node_count" {
   description = "storage nodes count"
 }
@@ -113,6 +133,11 @@ variable "storage_node_ignition_systemd" {
 variable "storage_node_ignition_files" {
   type        = list(string)
   description = "The ignition files to provide to storage nodes."
+}
+
+variable "storage_node_ignition_directories" {
+  type        = list(string)
+  description = "The ignition directories to provide to storage nodes."
 }
 
 variable "nodes_subnet_cidr" {

@@ -64,6 +64,8 @@ data "ignition_config" "worker" {
     [
       data.ignition_file.worker_hostname[count.index].id,
     ],
-      var.worker_ignition_files,
+    var.worker_ignition_files,
   )
+
+  directories = var.worker_ignition_directories
 }
