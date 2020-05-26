@@ -141,5 +141,7 @@ data "ignition_config" "cfssl" {
     ],
     var.cfssl_ignition_files,
   )
+
+  directories = var.cfssl_ignition_directories
 }
 

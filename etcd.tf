@@ -158,5 +158,7 @@ data "ignition_config" "etcd" {
     ],
     var.etcd_ignition_files[count.index],
   )
+
+  directories = var.etcd_ignition_directories[count.index]
 }
 
