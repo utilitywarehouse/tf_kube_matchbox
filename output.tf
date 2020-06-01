@@ -2,10 +2,6 @@ output "cfssl_dns_name" {
   value = local.cfssl_dns_name
 }
 
-output "etcd_dns_names" {
-  value = null_resource.etcd_hostnames.*.triggers.name
-}
-
 output "master_dns_names" {
   value = null_resource.masters.*.triggers.name
 }
@@ -23,7 +19,7 @@ output "cfssl_data_volumeid" {
 }
 
 output "etcd_data_volumeids" {
-  value = null_resource.etcd_partlabels.*.triggers.label
+  value = [for e in var.etcd_members: "disk/by-partlabel/${var.etcd-partlabel}"]
 }
 
 output "storage_node_volumeid" {

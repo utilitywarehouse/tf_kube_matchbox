@@ -34,18 +34,16 @@ variable "ssh_address_range" {
   description = "Address range from which to allow ssh"
 }
 
-variable "etcd_instance_count" {
-  default     = 3
-  description = "etcd members count"
-}
+variable "etcd_members" {
+  description = "List of mac addresses for each etcd member"
 
-variable "etcd_mac_addresses" {
-  type        = list(string)
-  description = "Mac address of etcd member nodes"
+  type = list(object({
+    mac_addresses = list(string)
+  }))
 }
 
 variable "etcd_subnet_cidr" {
-  description = "Address range for etcd members"
+  description = "Address range for etcd members for iptables rules"
 }
 
 variable "etcd_ignition_systemd" {

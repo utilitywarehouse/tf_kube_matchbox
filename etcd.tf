@@ -1,5 +1,5 @@
 resource "matchbox_profile" "etcd" {
-  count  = var.etcd_instance_count
+  count  = length(var.etcd_members)
   name   = "etcd-${count.index}"
   kernel = "http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe.vmlinuz"
 
@@ -17,6 +17,37 @@ resource "matchbox_profile" "etcd" {
   ]
 
   raw_ignition = data.ignition_config.etcd[count.index].rendered
+}
+
+# construct a list of group maps where each group has the following format:
+# group {
+#   mac = <mac_address>
+#   profile =<matchbox_profile>
+# }
+locals {
+  etcd_groups = flatten([
+    for index, profile in matchbox_profile.etcd: [
+        for _, mac_address in var.etcd_members[index].mac_addresses : {
+          mac     = mac_address
+          profile = profile
+        }
+      ]
+  ])
+}
+
+resource "matchbox_group" "etcd" {
+  count = length(local.etcd_groups)
+  name    = "etcd-${count.index}"
+
+  profile = local.etcd_groups[count.index].profile.name
+
+  selector = {
+    mac = local.etcd_groups[count.index].mac
+  }
+
+  metadata = {
+    ignition_endpoint = "${var.matchbox_http_endpoint}/ignition"
+  }
 }
 
 variable "etcd-partlabel" {
@@ -59,39 +90,25 @@ data "ignition_filesystem" "etcd" {
   }
 }
 
-resource "null_resource" "etcd_partlabels" {
-  count = var.etcd_instance_count
+# Create the bond interface for each member
+# use first available mac address to override
+data "ignition_networkd_unit" "bond0_etcd" {
+  count = length(var.etcd_members)
 
-  triggers = {
-    label = "disk/by-partlabel/${var.etcd-partlabel}"
-  }
-}
+  name    = "20-bond0.network"
+  content = <<EOS
+[Match]
+Name=bond0
 
+[Link]
+MACAddress=${var.etcd_members[count.index].mac_addresses[0]}
 
-resource "null_resource" "etcd_hostnames" {
-  count = var.etcd_instance_count
-
-  triggers = {
-    name = "etcd-${count.index}.${var.dns_domain}"
-  }
-}
-
-// Set a hostname
-data "ignition_file" "etcd_hostname" {
-  count      = var.etcd_instance_count
-  filesystem = "root"
-  path       = "/etc/hostname"
-  mode       = 420
-
-  content {
-    content = <<EOS
-${null_resource.etcd_hostnames.*.triggers.name[count.index]}
+[Network]
+DHCP=yes
 EOS
-
-  }
 }
 
-// Firewall rules via iptables
+# Firewall rules via iptables
 data "ignition_file" "etcd_iptables_rules" {
   filesystem = "root"
   path       = "/var/lib/iptables/rules-save"
@@ -135,10 +152,16 @@ EOS
 
 // Get ignition config from the module
 data "ignition_config" "etcd" {
-  count = var.etcd_instance_count
+  count = length(var.etcd_members)
 
   disks = [
     data.ignition_disk.etcd-sda.id,
+  ]
+
+  networkd = [
+    data.ignition_networkd_unit.bond_net_eno.id,
+    data.ignition_networkd_unit.bond_netdev.id,
+    data.ignition_networkd_unit.bond0_etcd[count.index].id,
   ]
 
   filesystems = [
@@ -153,7 +176,6 @@ data "ignition_config" "etcd" {
 
   files = concat(
     [
-      data.ignition_file.etcd_hostname[count.index].id,
       data.ignition_file.etcd_iptables_rules.id,
     ],
     var.etcd_ignition_files[count.index],
@@ -161,4 +183,3 @@ data "ignition_config" "etcd" {
 
   directories = var.etcd_ignition_directories[count.index]
 }
-

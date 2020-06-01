@@ -11,20 +11,6 @@ resource "matchbox_group" "cfssl" {
   }
 }
 
-resource "matchbox_group" "etcd" {
-  count   = var.etcd_instance_count
-  name    = "etcd-${count.index}"
-  profile = matchbox_profile.etcd[count.index].name
-
-  selector = {
-    mac = var.etcd_mac_addresses[count.index]
-  }
-
-  metadata = {
-    ignition_endpoint = "${var.matchbox_http_endpoint}/ignition"
-  }
-}
-
 resource "matchbox_group" "master" {
   count   = var.masters_instance_count
   name    = "master-${count.index}"
