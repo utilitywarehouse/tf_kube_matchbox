@@ -46,3 +46,28 @@ EOS
 
 }
 
+# Common Network config
+# Bond network interfaces eno*
+data "ignition_networkd_unit" "bond_net_eno" {
+  name    = "00-eno.network"
+  content = <<EOS
+[Match]
+Name=eno*
+
+[Network]
+Bond=bond0
+EOS
+}
+
+# bond0 device
+data "ignition_networkd_unit" "bond_netdev" {
+  name    = "10-bond0.netdev"
+  content = <<EOS
+[NetDev]
+Name=bond0
+Kind=bond
+
+[Bond]
+Mode=802.3ad
+EOS
+}
