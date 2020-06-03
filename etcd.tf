@@ -143,6 +143,7 @@ data "ignition_file" "etcd_iptables_rules" {
 # Allow incoming ICMP for echo replies, unreachable destination messages, and time exceeded
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 0 -j ACCEPT
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 3 -j ACCEPT
+-A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 8 -j ACCEPT
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 11 -j ACCEPT
 COMMIT
 EOS
