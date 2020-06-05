@@ -11,20 +11,6 @@ resource "matchbox_group" "cfssl" {
   }
 }
 
-resource "matchbox_group" "master" {
-  count   = var.masters_instance_count
-  name    = "master-${count.index}"
-  profile = matchbox_profile.master[count.index].name
-
-  selector = {
-    mac = null_resource.masters.*.triggers.mac_address[count.index]
-  }
-
-  metadata = {
-    ignition_endpoint = "${var.matchbox_http_endpoint}/ignition"
-  }
-}
-
 resource "matchbox_group" "worker" {
   count   = var.workers_instance_count
   name    = "worker-${count.index}"

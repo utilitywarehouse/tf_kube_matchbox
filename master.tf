@@ -1,5 +1,5 @@
 resource "matchbox_profile" "master" {
-  count  = var.masters_instance_count
+  count  = length(var.master_instances)
   name   = "master-${count.index}"
   kernel = "http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe.vmlinuz"
 
@@ -19,37 +19,68 @@ resource "matchbox_profile" "master" {
   raw_ignition = data.ignition_config.master[count.index].rendered
 }
 
-resource "null_resource" "masters" {
-  count = var.masters_instance_count
+# construct a list of group maps where each group has the following format:
+# group {
+#   mac = <mac_address>
+#   profile =<matchbox_profile>
+# }
+locals {
+  master_groups = flatten([
+    for index, profile in matchbox_profile.master : [
+      for _, mac_address in var.master_instances[index].mac_addresses : {
+        mac     = mac_address
+        profile = profile
+      }
+    ]
+  ])
+}
 
-  triggers = {
-    name        = "master-${count.index}.${var.dns_domain}"
-    mac_address = element(split(",", var.masters_instances[count.index]), 0)
-    disk_type   = element(split(",", var.masters_instances[count.index]), 1)
+resource "matchbox_group" "master" {
+  count = length(var.master_instances)
+  name  = "master-${count.index}"
+
+  profile = local.master_groups[count.index].profile.name
+
+  selector = {
+    mac = local.master_groups[count.index].mac
+  }
+
+  metadata = {
+    ignition_endpoint = "${var.matchbox_http_endpoint}/ignition"
   }
 }
 
-// Set a hostname
-data "ignition_file" "master_hostname" {
-  count      = var.masters_instance_count
-  filesystem = "root"
-  path       = "/etc/hostname"
-  mode       = 420
+# Create the bond interface for each node
+# use first available mac address to override
+data "ignition_networkd_unit" "bond0_master" {
+  count = length(var.master_instances)
 
-  content {
-    content = <<EOS
-${null_resource.masters.*.triggers.name[count.index]}
+  name    = "20-bond0.network"
+  content = <<EOS
+[Match]
+Name=bond0
+
+[Link]
+MACAddress=${var.master_instances[count.index].mac_addresses[0]}
+
+[Network]
+DHCP=yes
 EOS
-
-  }
 }
+
 
 // Get ignition config from the module
 data "ignition_config" "master" {
-  count = var.masters_instance_count
+  count = length(var.master_instances)
 
   disks = [
-    null_resource.masters.*.triggers.disk_type[count.index] == "nvme" ? data.ignition_disk.devnvme.id : data.ignition_disk.devsda.id,
+    data.ignition_disk.devsda.id,
+  ]
+
+  networkd = [
+    data.ignition_networkd_unit.bond_net_eno.id,
+    data.ignition_networkd_unit.bond_netdev.id,
+    data.ignition_networkd_unit.bond0_master[count.index].id,
   ]
 
   filesystems = [
@@ -60,12 +91,7 @@ data "ignition_config" "master" {
     var.master_ignition_systemd,
   )
 
-  files = concat(
-    [
-      data.ignition_file.master_hostname[count.index].id,
-    ],
-    var.master_ignition_files,
-  )
+  files = var.master_ignition_files
 
   directories = var.master_ignition_directories
 }
