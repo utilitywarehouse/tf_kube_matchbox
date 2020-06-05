@@ -61,18 +61,16 @@ variable "etcd_ignition_directories" {
   description = "The ignition directories to provide to the etcd members."
 }
 
-variable "masters_instance_count" {
-  default     = 3
-  description = "master nodes count"
+variable "master_instances" {
+  description = "List of mac addresses for each master node"
+
+  type = list(object({
+    mac_addresses = list(string)
+  }))
 }
 
 variable "masters_subnet_cidr" {
-  description = "Address range for master nodes"
-}
-
-variable "masters_instances" {
-  type        = list(string)
-  description = "master instances list ['<mac_address>,<disk_type>']"
+  description = "Address range for master nodes for iptables rules"
 }
 
 variable "master_ignition_systemd" {
