@@ -2,10 +2,6 @@ output "cfssl_dns_name" {
   value = local.cfssl_dns_name
 }
 
-output "worker_dns_names" {
-  value = null_resource.workers.*.triggers.name
-}
-
 output "storage_node_dns_names" {
   value = null_resource.storage-nodes.*.triggers.name
 }
