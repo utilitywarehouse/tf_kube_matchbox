@@ -88,13 +88,12 @@ variable "master_ignition_directories" {
   description = "The ignition directories to provide to master nodes."
 }
 
-variable "workers_instance_count" {
-  description = "worker nodes count"
-}
+variable "worker_instances" {
+  description = "List of mac addresses for each worker node"
 
-variable "workers_instances" {
-  type        = list(string)
-  description = "worker instances list ['<mac_address>,<disk_type>']"
+  type = list(object({
+    mac_addresses = list(string)
+  }))
 }
 
 variable "worker_ignition_systemd" {
