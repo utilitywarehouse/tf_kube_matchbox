@@ -36,7 +36,7 @@ locals {
 }
 
 resource "matchbox_group" "worker" {
-  count = length(var.worker_groups)
+  count = length(local.worker_groups)
   name  = "worker-${count.index}"
 
   profile = local.worker_groups[count.index].profile.name
