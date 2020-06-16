@@ -36,7 +36,7 @@ locals {
 }
 
 resource "matchbox_group" "master" {
-  count = length(var.master_instances)
+  count = length(var.master_groups)
   name  = "master-${count.index}"
 
   profile = local.master_groups[count.index].profile.name
