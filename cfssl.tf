@@ -18,6 +18,19 @@ resource "matchbox_profile" "cfssl" {
   raw_ignition = data.ignition_config.cfssl.rendered
 }
 
+resource "matchbox_group" "cfssl" {
+  name    = "cfssl"
+  profile = matchbox_profile.cfssl.name
+
+  selector = {
+    mac = var.cfssl_mac_address
+  }
+
+  metadata = {
+    ignition_endpoint = "${var.matchbox_http_endpoint}/ignition"
+  }
+}
+
 variable "cfssl-partlabel" {
   default = "CFSSL"
 }
