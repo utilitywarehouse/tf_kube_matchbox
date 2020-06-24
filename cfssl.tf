@@ -19,11 +19,12 @@ resource "matchbox_profile" "cfssl" {
 }
 
 resource "matchbox_group" "cfssl" {
-  name    = "cfssl"
+  count   = length(var.cfssl_instance.mac_addresses)
+  name    = "cfssl-${count.index}"
   profile = matchbox_profile.cfssl.name
 
   selector = {
-    mac = var.cfssl_mac_address
+    mac = var.cfssl_instance.mac_addresses[count.index]
   }
 
   metadata = {
@@ -31,62 +32,20 @@ resource "matchbox_group" "cfssl" {
   }
 }
 
-variable "cfssl-partlabel" {
-  default = "CFSSL"
-}
+# Create the bond interface for each node
+# use first available mac address to override
+data "ignition_networkd_unit" "bond0_cfssl" {
+  name    = "20-bond0.network"
+  content = <<EOS
+[Match]
+Name=bond0
 
-data "ignition_disk" "cfssl-sda" {
-  device     = "/dev/sda"
-  wipe_table = true
+[Link]
+MACAddress=${var.cfssl_instance.mac_addresses[0]}
 
-  partition {
-    size   = 12502835 // Approx 5 gigs
-    label  = var.cfssl-partlabel
-    number = 1
-  }
-
-  partition {
-    label  = "ROOT"
-    number = 2
-  }
-}
-
-data "ignition_filesystem" "root-cfssl" {
-  name = "ROOT"
-
-  mount {
-    device          = "/dev/disk/by-partlabel/ROOT"
-    wipe_filesystem = true
-    format          = "ext4"
-    label           = "ROOT"
-  }
-}
-
-data "ignition_filesystem" "cfssl" {
-  name = "cfssl"
-
-  mount {
-    device = "/dev/disk/by-partlabel/${var.cfssl-partlabel}"
-    format = "ext4"
-  }
-}
-
-// Set a hostname
-locals {
-  cfssl_dns_name = "cfssl.${var.dns_domain}"
-}
-
-data "ignition_file" "cfssl_hostname" {
-  filesystem = "root"
-  path       = "/etc/hostname"
-  mode       = 420
-
-  content {
-    content = <<EOS
-${local.cfssl_dns_name}
+[Network]
+DHCP=yes
 EOS
-
-  }
 }
 
 // Firewall rules via iptables
@@ -135,12 +94,17 @@ EOS
 // Get ignition config from the module
 data "ignition_config" "cfssl" {
   disks = [
-    data.ignition_disk.cfssl-sda.id,
+    data.ignition_disk.devsda.id,
   ]
 
   filesystems = [
-    data.ignition_filesystem.root-cfssl.id,
-    data.ignition_filesystem.cfssl.id,
+    data.ignition_filesystem.root.id,
+  ]
+
+  networkd = [
+    data.ignition_networkd_unit.bond_net_eno.id,
+    data.ignition_networkd_unit.bond_netdev.id,
+    data.ignition_networkd_unit.bond0_cfssl.id,
   ]
 
   systemd = concat(
@@ -150,7 +114,6 @@ data "ignition_config" "cfssl" {
 
   files = concat(
     [
-      data.ignition_file.cfssl_hostname.id,
       data.ignition_file.cfssl_iptables_rules.id,
     ],
     var.cfssl_ignition_files,
@@ -158,4 +121,3 @@ data "ignition_config" "cfssl" {
 
   directories = var.cfssl_ignition_directories
 }
-
