@@ -7,12 +7,11 @@ variable "dns_domain" {
   description = "The domain under which this cluster's DNS records are set (cluster-name.example.com)."
 }
 
-variable "cfssl_address" {
-  description = "Ip address of cfssl server"
-}
-
-variable "cfssl_mac_address" {
-  description = "Mac address of cfssl box"
+variable "cfssl_instance" {
+  type = object({
+    ip_address    = string
+    mac_addresses = list(string)
+  })
 }
 
 variable "cfssl_ignition_systemd" {
