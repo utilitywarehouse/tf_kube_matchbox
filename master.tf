@@ -50,6 +50,20 @@ resource "matchbox_group" "master" {
   }
 }
 
+# Set a hostname
+data "ignition_file" "master_hostname" {
+  count      = length(var.master_instances)
+  filesystem = "root"
+  path       = "/etc/hostname"
+  mode       = 420
+
+  content {
+    content = <<EOS
+master-${count.index}.${var.dns_domain}
+EOS
+  }
+}
+
 # Create the bond interface for each node
 # use first available mac address to override
 data "ignition_networkd_unit" "bond0_master" {
@@ -68,8 +82,6 @@ DHCP=yes
 EOS
 }
 
-
-// Get ignition config from the module
 data "ignition_config" "master" {
   count = length(var.master_instances)
 
@@ -91,7 +103,12 @@ data "ignition_config" "master" {
     var.master_ignition_systemd,
   )
 
-  files = var.master_ignition_files
+  files = concat(
+    var.master_ignition_files,
+    [
+      data.ignition_file.master_hostname[count.index].id,
+    ]
+  )
 
   directories = var.master_ignition_directories
 }

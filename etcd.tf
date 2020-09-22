@@ -26,18 +26,18 @@ resource "matchbox_profile" "etcd" {
 # }
 locals {
   etcd_groups = flatten([
-    for index, profile in matchbox_profile.etcd: [
-        for _, mac_address in var.etcd_members[index].mac_addresses : {
-          mac     = mac_address
-          profile = profile
-        }
-      ]
+    for index, profile in matchbox_profile.etcd : [
+      for _, mac_address in var.etcd_members[index].mac_addresses : {
+        mac     = mac_address
+        profile = profile
+      }
+    ]
   ])
 }
 
 resource "matchbox_group" "etcd" {
   count = length(local.etcd_groups)
-  name    = "etcd-${count.index}"
+  name  = "etcd-${count.index}"
 
   profile = local.etcd_groups[count.index].profile.name
 
@@ -87,6 +87,20 @@ data "ignition_filesystem" "etcd" {
   mount {
     device = "/dev/disk/by-partlabel/${var.etcd-partlabel}"
     format = "ext4"
+  }
+}
+
+# Set a hostname
+data "ignition_file" "etcd_hostname" {
+  count      = length(var.etcd_members)
+  filesystem = "root"
+  path       = "/etc/hostname"
+  mode       = 420
+
+  content {
+    content = <<EOS
+etcd-${count.index}.${var.dns_domain}
+EOS
   }
 }
 
@@ -151,7 +165,6 @@ EOS
   }
 }
 
-// Get ignition config from the module
 data "ignition_config" "etcd" {
   count = length(var.etcd_members)
 
@@ -177,6 +190,7 @@ data "ignition_config" "etcd" {
 
   files = concat(
     [
+      data.ignition_file.etcd_hostname[count.index].id,
       data.ignition_file.etcd_iptables_rules.id,
     ],
     var.etcd_ignition_files[count.index],
