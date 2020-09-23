@@ -32,6 +32,19 @@ resource "matchbox_group" "cfssl" {
   }
 }
 
+# Set a hostname
+data "ignition_file" "cfssl_hostname" {
+  filesystem = "root"
+  path       = "/etc/hostname"
+  mode       = 420
+
+  content {
+    content = <<EOS
+cfssl.${var.dns_domain}
+EOS
+  }
+}
+
 # Create the bond interface for each node
 # use first available mac address to override
 data "ignition_networkd_unit" "bond0_cfssl" {
@@ -114,6 +127,7 @@ data "ignition_config" "cfssl" {
 
   files = concat(
     [
+      data.ignition_file.cfssl_hostname.id,
       data.ignition_file.cfssl_iptables_rules.id,
     ],
     var.cfssl_ignition_files,

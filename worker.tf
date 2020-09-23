@@ -50,6 +50,20 @@ resource "matchbox_group" "worker" {
   }
 }
 
+# Set a hostname
+data "ignition_file" "worker_hostname" {
+  count      = length(var.worker_instances)
+  filesystem = "root"
+  path       = "/etc/hostname"
+  mode       = 420
+
+  content {
+    content = <<EOS
+worker-${count.index}.${var.dns_domain}
+EOS
+  }
+}
+
 # Create the bond interface for each node
 # use first available mac address to override
 data "ignition_networkd_unit" "bond0_worker" {
@@ -68,7 +82,6 @@ DHCP=yes
 EOS
 }
 
-// Get ignition config from the module
 data "ignition_config" "worker" {
   count = length(var.worker_instances)
 
@@ -90,7 +103,12 @@ data "ignition_config" "worker" {
     var.worker_ignition_systemd,
   )
 
-  files = var.worker_ignition_files
+  files = concat(
+    var.worker_ignition_files,
+    [
+      data.ignition_file.worker_hostname[count.index].id,
+    ]
+  )
 
   directories = var.worker_ignition_directories
 }
