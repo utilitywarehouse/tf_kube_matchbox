@@ -64,6 +64,20 @@ EOS
   }
 }
 
+data "ignition_networkd_unit" "bond_net_eno_worker" {
+  name    = "00-eno.network"
+  content = <<EOS
+[Match]
+Name=eno*
+
+[Link]
+MTUBytes=9000
+
+[Network]
+Bond=bond0
+EOS
+}
+
 # Create the bond interface for each node
 # use first available mac address to override
 data "ignition_networkd_unit" "bond0_worker" {
@@ -75,6 +89,7 @@ data "ignition_networkd_unit" "bond0_worker" {
 Name=bond0
 
 [Link]
+MTUBytes=9000
 MACAddress=${var.worker_instances[count.index].mac_addresses[0]}
 
 [Network]
@@ -90,7 +105,7 @@ data "ignition_config" "worker" {
   ]
 
   networkd = [
-    data.ignition_networkd_unit.bond_net_eno.id,
+    data.ignition_networkd_unit.bond_net_eno_worker.id,
     data.ignition_networkd_unit.bond_netdev.id,
     data.ignition_networkd_unit.bond0_worker[count.index].id,
   ]
