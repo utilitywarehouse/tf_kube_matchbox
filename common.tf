@@ -54,6 +54,9 @@ data "ignition_networkd_unit" "bond_net_eno" {
 [Match]
 Name=eno*
 
+[Link]
+MTUBytes=9000
+
 [Network]
 Bond=bond0
 EOS

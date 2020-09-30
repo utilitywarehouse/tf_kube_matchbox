@@ -115,6 +115,7 @@ data "ignition_networkd_unit" "bond0_etcd" {
 Name=bond0
 
 [Link]
+MTUBytes=9000
 MACAddress=${var.etcd_members[count.index].mac_addresses[0]}
 
 [Network]

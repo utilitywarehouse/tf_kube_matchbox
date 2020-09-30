@@ -75,6 +75,7 @@ data "ignition_networkd_unit" "bond0_master" {
 Name=bond0
 
 [Link]
+MTUBytes=9000
 MACAddress=${var.master_instances[count.index].mac_addresses[0]}
 
 [Network]

@@ -54,6 +54,7 @@ data "ignition_networkd_unit" "bond0_cfssl" {
 Name=bond0
 
 [Link]
+MTUBytes=9000
 MACAddress=${var.cfssl_instance.mac_addresses[0]}
 
 [Network]
