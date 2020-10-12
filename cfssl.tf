@@ -108,28 +108,28 @@ EOS
 // Get ignition config from the module
 data "ignition_config" "cfssl" {
   disks = [
-    data.ignition_disk.devsda.id,
+    data.ignition_disk.devsda.rendered,
   ]
 
   filesystems = [
-    data.ignition_filesystem.root.id,
+    data.ignition_filesystem.root.rendered,
   ]
 
   networkd = [
-    data.ignition_networkd_unit.bond_net_eno.id,
-    data.ignition_networkd_unit.bond_netdev.id,
-    data.ignition_networkd_unit.bond0_cfssl.id,
+    data.ignition_networkd_unit.bond_net_eno.rendered,
+    data.ignition_networkd_unit.bond_netdev.rendered,
+    data.ignition_networkd_unit.bond0_cfssl.rendered,
   ]
 
   systemd = concat(
-    [data.ignition_systemd_unit.iptables-rule-load.id],
+    [data.ignition_systemd_unit.iptables-rule-load.rendered],
     var.cfssl_ignition_systemd,
   )
 
   files = concat(
     [
-      data.ignition_file.cfssl_hostname.id,
-      data.ignition_file.cfssl_iptables_rules.id,
+      data.ignition_file.cfssl_hostname.rendered,
+      data.ignition_file.cfssl_iptables_rules.rendered,
     ],
     var.cfssl_ignition_files,
   )

@@ -87,17 +87,17 @@ data "ignition_config" "worker" {
   count = length(var.worker_instances)
 
   disks = [
-    data.ignition_disk.devsda.id,
+    data.ignition_disk.devsda.rendered,
   ]
 
   networkd = [
-    data.ignition_networkd_unit.bond_net_eno.id,
-    data.ignition_networkd_unit.bond_netdev.id,
-    data.ignition_networkd_unit.bond0_worker[count.index].id,
+    data.ignition_networkd_unit.bond_net_eno.rendered,
+    data.ignition_networkd_unit.bond_netdev.rendered,
+    data.ignition_networkd_unit.bond0_worker[count.index].rendered,
   ]
 
   filesystems = [
-    data.ignition_filesystem.root.id,
+    data.ignition_filesystem.root.rendered,
   ]
 
   systemd = concat(
@@ -107,7 +107,7 @@ data "ignition_config" "worker" {
   files = concat(
     var.worker_ignition_files,
     [
-      data.ignition_file.worker_hostname[count.index].id,
+      data.ignition_file.worker_hostname[count.index].rendered,
     ]
   )
 
