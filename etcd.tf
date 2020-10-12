@@ -170,29 +170,29 @@ data "ignition_config" "etcd" {
   count = length(var.etcd_members)
 
   disks = [
-    data.ignition_disk.etcd-sda.id,
+    data.ignition_disk.etcd-sda.rendered,
   ]
 
   networkd = [
-    data.ignition_networkd_unit.bond_net_eno.id,
-    data.ignition_networkd_unit.bond_netdev.id,
-    data.ignition_networkd_unit.bond0_etcd[count.index].id,
+    data.ignition_networkd_unit.bond_net_eno.rendered,
+    data.ignition_networkd_unit.bond_netdev.rendered,
+    data.ignition_networkd_unit.bond0_etcd[count.index].rendered,
   ]
 
   filesystems = [
-    data.ignition_filesystem.root-etcd.id,
-    data.ignition_filesystem.etcd.id,
+    data.ignition_filesystem.root-etcd.rendered,
+    data.ignition_filesystem.etcd.rendered,
   ]
 
   systemd = concat(
-    [data.ignition_systemd_unit.iptables-rule-load.id],
+    [data.ignition_systemd_unit.iptables-rule-load.rendered],
     var.etcd_ignition_systemd[count.index],
   )
 
   files = concat(
     [
-      data.ignition_file.etcd_hostname[count.index].id,
-      data.ignition_file.etcd_iptables_rules.id,
+      data.ignition_file.etcd_hostname[count.index].rendered,
+      data.ignition_file.etcd_iptables_rules.rendered,
     ],
     var.etcd_ignition_files[count.index],
   )
