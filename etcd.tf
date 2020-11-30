@@ -26,10 +26,10 @@ resource "matchbox_profile" "etcd" {
 # }
 locals {
   etcd_groups = flatten([
-    for index, profile in matchbox_profile.etcd : [
+    for index, _ in var.etcd_members : [
       for _, mac_address in var.etcd_members[index].mac_addresses : {
         mac     = mac_address
-        profile = profile
+        profile = matchbox_profile.etcd[index]
       }
     ]
   ])

@@ -26,10 +26,10 @@ resource "matchbox_profile" "worker" {
 # }
 locals {
   worker_groups = flatten([
-    for index, profile in matchbox_profile.worker : [
+    for index, _ in var.worker_instances : [
       for _, mac_address in var.worker_instances[index].mac_addresses : {
         mac     = mac_address
-        profile = profile
+        profile = matchbox_profile.worker[index]
       }
     ]
   ])

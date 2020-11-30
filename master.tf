@@ -26,10 +26,10 @@ resource "matchbox_profile" "master" {
 # }
 locals {
   master_groups = flatten([
-    for index, profile in matchbox_profile.master : [
+    for index, _ in var.master_instances : [
       for _, mac_address in var.master_instances[index].mac_addresses : {
         mac     = mac_address
-        profile = profile
+        profile = matchbox_profile.master[index]
       }
     ]
   ])
