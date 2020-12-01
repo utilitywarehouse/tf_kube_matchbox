@@ -1,12 +1,8 @@
 resource "matchbox_profile" "worker" {
   count  = length(var.worker_instances)
   name   = "worker-${count.index}"
-  kernel = "http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe.vmlinuz"
-
-  initrd = [
-    "http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe_image.cpio.gz",
-  ]
-
+  kernel = var.flatcar_kernel_address
+  initrd = var.flatcar_initrd_addresses
   args = [
     "initrd=flatcar_production_pxe_image.cpio.gz",
     "ignition.config.url=${var.matchbox_http_endpoint}/ignition?uuid=$${uuid}&mac=$${mac:hexhyp}",
