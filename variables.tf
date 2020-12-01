@@ -3,6 +3,18 @@ variable "matchbox_http_endpoint" {
   description = "Matchbox HTTP read-only endpoint (e.g. http://matchbox.example.com:8080)"
 }
 
+variable "flatcar_kerner_address" {
+  type        = string
+  description = "Location of the http endpoint that serves the kernel vmlinuz file"
+  default     = "http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe.vmlinuz"
+}
+
+variable "flatcar_initrd_addresses" {
+  type        = list(string)
+  description = "List of http endpoint locations the serve the flatcar initrd assets"
+  default     = list("http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe_image.cpio.gz")
+}
+
 variable "dns_domain" {
   description = "The domain under which this cluster's DNS records are set (cluster-name.example.com)."
 }
