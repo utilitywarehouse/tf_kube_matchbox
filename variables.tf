@@ -3,7 +3,7 @@ variable "matchbox_http_endpoint" {
   description = "Matchbox HTTP read-only endpoint (e.g. http://matchbox.example.com:8080)"
 }
 
-variable "flatcar_kerner_address" {
+variable "flatcar_kernel_address" {
   type        = string
   description = "Location of the http endpoint that serves the kernel vmlinuz file"
   default     = "http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe.vmlinuz"

@@ -1,6 +1,6 @@
 resource "matchbox_profile" "cfssl" {
   name   = "cfssl"
-  kernel = var.flatcar_kerner_address
+  kernel = var.flatcar_kernel_address
   initrd = var.flatcar_initrd_addresses
   args = [
     "initrd=flatcar_production_pxe_image.cpio.gz",

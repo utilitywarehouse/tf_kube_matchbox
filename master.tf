@@ -1,7 +1,7 @@
 resource "matchbox_profile" "master" {
   count  = length(var.master_instances)
   name   = "master-${count.index}"
-  kernel = var.flatcar_kerner_address
+  kernel = var.flatcar_kernel_address
   initrd = var.flatcar_initrd_addresses
   args = [
     "initrd=flatcar_production_pxe_image.cpio.gz",
