@@ -12,7 +12,9 @@ variable "flatcar_kerner_address" {
 variable "flatcar_initrd_addresses" {
   type        = list(string)
   description = "List of http endpoint locations the serve the flatcar initrd assets"
-  default     = list("http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe_image.cpio.gz")
+  default = [
+    "http://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_pxe_image.cpio.gz",
+  ]
 }
 
 variable "dns_domain" {
