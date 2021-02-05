@@ -1,3 +1,9 @@
+resource "random_id" "etcd-machine-id" {
+  count = length(var.etcd_members)
+
+  byte_length = 16
+}
+
 resource "matchbox_profile" "etcd" {
   count  = length(var.etcd_members)
   name   = "etcd-${count.index}"
@@ -7,6 +13,7 @@ resource "matchbox_profile" "etcd" {
     "initrd=flatcar_production_pxe_image.cpio.gz",
     "ignition.config.url=${var.matchbox_http_endpoint}/ignition?uuid=$${uuid}&mac=$${mac:hexhyp}",
     "flatcar.first_boot=yes",
+    "systemd.machine-id=${random_id.etcd-machine-id[count.index].hex}",
     "root=LABEL=ROOT",
     "console=tty0",
     "console=ttyS0",
