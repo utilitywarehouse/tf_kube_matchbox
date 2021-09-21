@@ -106,7 +106,15 @@ variable "worker_instances" {
 
   type = list(object({
     mac_addresses = list(string)
+    disk_type     = string
   }))
+
+  validation {
+    condition = alltrue([
+      for w in var.worker_instances : contains(["sata", "nvme"], w.disk_type)
+    ])
+    error_message = "All workers must specify a disk type of either sata or nvme."
+  }
 }
 
 variable "worker_ignition_systemd" {
