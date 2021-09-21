@@ -106,6 +106,7 @@ variable "worker_instances" {
 
   type = list(object({
     mac_addresses = list(string)
+    disk_type     = string
   }))
 }
 

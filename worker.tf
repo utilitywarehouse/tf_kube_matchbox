@@ -83,7 +83,7 @@ data "ignition_config" "worker" {
   count = length(var.worker_instances)
 
   disks = [
-    data.ignition_disk.devsda.rendered,
+    var.worker_instances[count.index].disk_type == "nvme" ? data.ignition_disk.devnvme.rendered : data.ignition_disk.devsda.rendered,
   ]
 
   networkd = [
