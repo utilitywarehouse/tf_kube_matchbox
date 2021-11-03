@@ -50,8 +50,24 @@ variable "etcd-partlabel" {
   default = "ETCD"
 }
 
-data "ignition_disk" "etcd-sda" {
+data "ignition_disk" "etcd_sda" {
   device     = "/dev/sda"
+  wipe_table = true
+
+  partition {
+    size   = 50011340 // Approx 25 gigs
+    label  = var.etcd-partlabel
+    number = 1
+  }
+
+  partition {
+    label  = "ROOT"
+    number = 2
+  }
+}
+
+data "ignition_disk" "etcd_nvme" {
+  device     = "/dev/nvme0n1"
   wipe_table = true
 
   partition {
@@ -166,7 +182,7 @@ data "ignition_config" "etcd" {
   count = length(var.etcd_members)
 
   disks = [
-    data.ignition_disk.etcd-sda.rendered,
+    var.etcd_members[count.index].disk_type == "nvme" ? data.ignition_disk.etcd_nvme.rendered : data.ignition_disk.etcd_sda.rendered,
   ]
 
   networkd = [
