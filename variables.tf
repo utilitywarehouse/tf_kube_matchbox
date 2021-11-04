@@ -48,11 +48,20 @@ variable "ssh_address_range" {
 }
 
 variable "etcd_members" {
-  description = "List of mac addresses for each etcd member"
+  description = "List of mac addresses and disk type for each etcd member"
 
   type = list(object({
     mac_addresses = list(string)
+    disk_type     = string
   }))
+
+  validation {
+    condition = alltrue([
+      for e in var.etcd_members : contains(["sata", "nvme"], e.disk_type)
+    ])
+    error_message = "All etcd members must specify a disk type of either sata or nvme."
+  }
+
 }
 
 variable "etcd_subnet_cidr" {
@@ -75,11 +84,20 @@ variable "etcd_ignition_directories" {
 }
 
 variable "master_instances" {
-  description = "List of mac addresses for each master node"
+  description = "List of mac addresses and disk type for each master node"
 
   type = list(object({
     mac_addresses = list(string)
+    disk_type     = string
   }))
+
+  validation {
+    condition = alltrue([
+      for m in var.master_instances : contains(["sata", "nvme"], m.disk_type)
+    ])
+    error_message = "All master instances must specify a disk type of either sata or nvme."
+  }
+
 }
 
 variable "masters_subnet_cidr" {
