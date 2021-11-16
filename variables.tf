@@ -25,7 +25,13 @@ variable "cfssl_instance" {
   type = object({
     ip_address    = string
     mac_addresses = list(string)
+    disk_type     = string
   })
+  validation {
+    condition     = contains(["sata", "nvme"], var.cfssl_instance.disk_type)
+    error_message = "Cfssl instance must specify a disk type of either sata or nvme."
+  }
+
 }
 
 variable "cfssl_ignition_systemd" {
