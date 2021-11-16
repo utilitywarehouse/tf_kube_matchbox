@@ -104,7 +104,7 @@ EOS
 // Get ignition config from the module
 data "ignition_config" "cfssl" {
   disks = [
-    data.ignition_disk.devsda.rendered,
+    var.cfssl_instance.disk_type == "nvme" ? data.ignition_disk.etcd_nvme.rendered : data.ignition_disk.etcd_sda.rendered,
   ]
 
   filesystems = [
