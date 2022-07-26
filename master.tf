@@ -48,10 +48,9 @@ resource "matchbox_group" "master" {
 
 # Set a hostname
 data "ignition_file" "master_hostname" {
-  count      = length(var.master_instances)
-  filesystem = "root"
-  path       = "/etc/hostname"
-  mode       = 420
+  count = length(var.master_instances)
+  path  = "/etc/hostname"
+  mode  = 420
 
   content {
     content = <<EOS
@@ -62,11 +61,14 @@ EOS
 
 # Create the bond interface for each node
 # use first available mac address to override
-data "ignition_networkd_unit" "bond0_master" {
+data "ignition_file" "bond0_master" {
   count = length(var.master_instances)
 
-  name    = "20-bond0.network"
-  content = <<EOS
+  path = "/etc/systemd/network/20-bond0.network"
+  mode = 420
+
+  content {
+    content = <<EOS
 [Match]
 Name=bond0
 
@@ -77,6 +79,7 @@ MACAddress=${var.master_instances[count.index].mac_addresses[0]}
 [Network]
 DHCP=yes
 EOS
+  }
 }
 
 data "ignition_config" "master" {
@@ -84,12 +87,6 @@ data "ignition_config" "master" {
 
   disks = [
     var.master_instances[count.index].disk_type == "nvme" ? data.ignition_disk.devnvme.rendered : data.ignition_disk.devsda.rendered,
-  ]
-
-  networkd = [
-    data.ignition_networkd_unit.bond_net_eno.rendered,
-    data.ignition_networkd_unit.bond_netdev.rendered,
-    data.ignition_networkd_unit.bond0_master[count.index].rendered,
   ]
 
   filesystems = [
@@ -103,6 +100,9 @@ data "ignition_config" "master" {
   files = concat(
     var.master_ignition_files,
     [
+      data.ignition_file.bond_net_eno.rendered,
+      data.ignition_file.bond_netdev.rendered,
+      data.ignition_file.bond0_master[count.index].rendered,
       data.ignition_file.master_hostname[count.index].rendered,
     ]
   )

@@ -21,14 +21,10 @@ data "ignition_disk" "devsda" {
 }
 
 data "ignition_filesystem" "root" {
-  name = "ROOT"
-
-  mount {
-    device          = "/dev/disk/by-partlabel/ROOT"
-    format          = "ext4"
-    wipe_filesystem = true
-    label           = "ROOT"
-  }
+  device          = "/dev/disk/by-partlabel/ROOT"
+  format          = "ext4"
+  wipe_filesystem = true
+  label           = "ROOT"
 }
 
 data "ignition_systemd_unit" "iptables-rule-load" {
@@ -48,9 +44,12 @@ EOS
 
 # Common Network config
 # Bond network interfaces eno*
-data "ignition_networkd_unit" "bond_net_eno" {
-  name    = "00-eno.network"
-  content = <<EOS
+data "ignition_file" "bond_net_eno" {
+  path = "/etc/systemd/network/00-eno.network"
+  mode = 420
+
+  content {
+    content = <<EOS
 [Match]
 Name=eno*
 
@@ -60,12 +59,16 @@ MTUBytes=9000
 [Network]
 Bond=bond0
 EOS
+  }
 }
 
 # bond0 device
-data "ignition_networkd_unit" "bond_netdev" {
-  name    = "10-bond0.netdev"
-  content = <<EOS
+data "ignition_file" "bond_netdev" {
+  path = "/etc/systemd/network/10-bond0.netdev"
+  mode = 420
+
+  content {
+    content = <<EOS
 [NetDev]
 Name=bond0
 Kind=bond
@@ -73,4 +76,5 @@ Kind=bond
 [Bond]
 Mode=802.3ad
 EOS
+  }
 }
