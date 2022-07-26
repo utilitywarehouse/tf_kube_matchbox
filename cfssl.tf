@@ -30,9 +30,8 @@ resource "matchbox_group" "cfssl" {
 
 # Set a hostname
 data "ignition_file" "cfssl_hostname" {
-  filesystem = "root"
-  path       = "/etc/hostname"
-  mode       = 420
+  path = "/etc/hostname"
+  mode = 420
 
   content {
     content = <<EOS
@@ -43,9 +42,12 @@ EOS
 
 # Create the bond interface for each node
 # use first available mac address to override
-data "ignition_networkd_unit" "bond0_cfssl" {
-  name    = "20-bond0.network"
-  content = <<EOS
+data "ignition_file" "bond0_cfssl" {
+  path = "/etc/systemd/network/20-bond0.network"
+  mode = 420
+
+  content {
+    content = <<EOS
 [Match]
 Name=bond0
 
@@ -56,13 +58,13 @@ MACAddress=${var.cfssl_instance.mac_addresses[0]}
 [Network]
 DHCP=yes
 EOS
+  }
 }
 
 // Firewall rules via iptables
 data "ignition_file" "cfssl_iptables_rules" {
-  filesystem = "root"
-  path       = "/var/lib/iptables/rules-save"
-  mode       = 420
+  path = "/var/lib/iptables/rules-save"
+  mode = 420
 
   content {
     content = <<EOS
@@ -111,12 +113,6 @@ data "ignition_config" "cfssl" {
     data.ignition_filesystem.root.rendered,
   ]
 
-  networkd = [
-    data.ignition_networkd_unit.bond_net_eno.rendered,
-    data.ignition_networkd_unit.bond_netdev.rendered,
-    data.ignition_networkd_unit.bond0_cfssl.rendered,
-  ]
-
   systemd = concat(
     [data.ignition_systemd_unit.iptables-rule-load.rendered],
     var.cfssl_ignition_systemd,
@@ -124,6 +120,9 @@ data "ignition_config" "cfssl" {
 
   files = concat(
     [
+      data.ignition_file.bond_net_eno.rendered,
+      data.ignition_file.bond_netdev.rendered,
+      data.ignition_file.bond0_cfssl.rendered,
       data.ignition_file.cfssl_hostname.rendered,
       data.ignition_file.cfssl_iptables_rules.rendered,
     ],

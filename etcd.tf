@@ -55,9 +55,9 @@ data "ignition_disk" "etcd_sda" {
   wipe_table = true
 
   partition {
-    size   = 50011340 // Approx 25 gigs
-    label  = var.etcd-partlabel
-    number = 1
+    sizemib = 25000 // Approx 25 gigs
+    label   = var.etcd-partlabel
+    number  = 1
   }
 
   partition {
@@ -71,9 +71,9 @@ data "ignition_disk" "etcd_nvme" {
   wipe_table = true
 
   partition {
-    size   = 50011340 // Approx 25 gigs
-    label  = var.etcd-partlabel
-    number = 1
+    sizemib = 25000 // Approx 25 gigs
+    label   = var.etcd-partlabel
+    number  = 1
   }
 
   partition {
@@ -83,31 +83,22 @@ data "ignition_disk" "etcd_nvme" {
 }
 
 data "ignition_filesystem" "root-etcd" {
-  name = "ROOT"
-
-  mount {
-    device          = "/dev/disk/by-partlabel/ROOT"
-    format          = "ext4"
-    wipe_filesystem = true
-    label           = "ROOT"
-  }
+  device          = "/dev/disk/by-partlabel/ROOT"
+  format          = "ext4"
+  wipe_filesystem = true
+  label           = "ROOT"
 }
 
 data "ignition_filesystem" "etcd" {
-  name = "etcd"
-
-  mount {
-    device = "/dev/disk/by-partlabel/${var.etcd-partlabel}"
-    format = "ext4"
-  }
+  device = "/dev/disk/by-partlabel/${var.etcd-partlabel}"
+  format = "ext4"
 }
 
 # Set a hostname
 data "ignition_file" "etcd_hostname" {
-  count      = length(var.etcd_members)
-  filesystem = "root"
-  path       = "/etc/hostname"
-  mode       = 420
+  count = length(var.etcd_members)
+  path  = "/etc/hostname"
+  mode  = 420
 
   content {
     content = <<EOS
@@ -118,11 +109,14 @@ EOS
 
 # Create the bond interface for each member
 # use first available mac address to override
-data "ignition_networkd_unit" "bond0_etcd" {
+data "ignition_file" "bond0_etcd" {
   count = length(var.etcd_members)
 
-  name    = "20-bond0.network"
-  content = <<EOS
+  path = "/etc/systemd/network/20-bond0.network"
+  mode = 420
+
+  content {
+    content = <<EOS
 [Match]
 Name=bond0
 
@@ -133,13 +127,13 @@ MACAddress=${var.etcd_members[count.index].mac_addresses[0]}
 [Network]
 DHCP=yes
 EOS
+  }
 }
 
 # Firewall rules via iptables
 data "ignition_file" "etcd_iptables_rules" {
-  filesystem = "root"
-  path       = "/var/lib/iptables/rules-save"
-  mode       = 420
+  path = "/var/lib/iptables/rules-save"
+  mode = 420
 
   content {
     content = <<EOS
@@ -185,12 +179,6 @@ data "ignition_config" "etcd" {
     var.etcd_members[count.index].disk_type == "nvme" ? data.ignition_disk.etcd_nvme.rendered : data.ignition_disk.etcd_sda.rendered,
   ]
 
-  networkd = [
-    data.ignition_networkd_unit.bond_net_eno.rendered,
-    data.ignition_networkd_unit.bond_netdev.rendered,
-    data.ignition_networkd_unit.bond0_etcd[count.index].rendered,
-  ]
-
   filesystems = [
     data.ignition_filesystem.root-etcd.rendered,
     data.ignition_filesystem.etcd.rendered,
@@ -203,6 +191,9 @@ data "ignition_config" "etcd" {
 
   files = concat(
     [
+      data.ignition_file.bond_net_eno.rendered,
+      data.ignition_file.bond_netdev.rendered,
+      data.ignition_file.bond0_etcd[count.index].rendered,
       data.ignition_file.etcd_hostname[count.index].rendered,
       data.ignition_file.etcd_iptables_rules.rendered,
     ],
