@@ -103,14 +103,46 @@ EOS
   }
 }
 
+variable "cfssl-partlabel" {
+  default = "CFSSL"
+}
+
+data "ignition_disk" "cfssl-local-partition" {
+  device     = var.cfssl_instance.disk_type == "nvme" ? "/dev/nvme0n1" : "/dev/sda"
+  wipe_table = true
+
+  partition {
+    sizemib = 12502835 // Approx 5 gigs
+    label   = var.cfssl-partlabel
+    number  = 1
+  }
+
+  partition {
+    label  = "ROOT"
+    number = 2
+  }
+}
+
+data "ignition_filesystem" "cfssl" {
+  device = "/dev/disk/by-partlabel/${var.cfssl-partlabel}"
+  format = "ext4"
+}
+
+locals {
+  no_local_partition = var.cfssl_instance.disk_type == "nvme" ? data.ignition_disk.devnvme.rendered : data.ignition_disk.devsda.rendered
+  local_partition    = data.ignition_disk.cfssl-local-partition.rendered
+  disk               = var.cfssl_local_patition_disk ? local.local_partition : local.no_local_partition
+}
+
 // Get ignition config from the module
 data "ignition_config" "cfssl" {
   disks = [
-    var.cfssl_instance.disk_type == "nvme" ? data.ignition_disk.devnvme.rendered : data.ignition_disk.devsda.rendered,
+    local.disk,
   ]
 
   filesystems = [
     data.ignition_filesystem.root.rendered,
+    var.cfssl_local_patition_disk ? data.ignition_filesystem.cfssl.rendered : "",
   ]
 
   systemd = concat(

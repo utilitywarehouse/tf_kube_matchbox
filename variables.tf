@@ -171,3 +171,9 @@ variable "cluster_internal_svc_subnet" {
 variable "pod_network" {
   description = "pod network cidr"
 }
+
+variable "cfssl_local_patition_disk" {
+  description = "Whether to create a local disk partition for storing cfssl data"
+  type        = bool
+  default     = false
+}
