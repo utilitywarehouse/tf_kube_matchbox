@@ -112,7 +112,7 @@ data "ignition_disk" "cfssl-local-partition" {
   wipe_table = true
 
   partition {
-    sizemib = 12502835 // Approx 5 gigs
+    sizemib = 5000 // Approx 5 gigs
     label   = var.cfssl-partlabel
     number  = 1
   }
