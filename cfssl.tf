@@ -129,15 +129,15 @@ data "ignition_filesystem" "cfssl" {
 }
 
 locals {
-  no_local_partition = var.cfssl_instance.disk_type == "nvme" ? data.ignition_disk.devnvme.rendered : data.ignition_disk.devsda.rendered
-  local_partition    = data.ignition_disk.cfssl-local-partition.rendered
-  disk               = var.cfssl_local_patition_disk ? local.local_partition : local.no_local_partition
+  cfssl_no_local_partition = var.cfssl_instance.disk_type == "nvme" ? data.ignition_disk.devnvme.rendered : data.ignition_disk.devsda.rendered
+  cfssl_local_partition    = data.ignition_disk.cfssl-local-partition.rendered
+  cfssl_disk               = var.cfssl_local_patition_disk ? local.cfssl_local_partition : local.cfssl_no_local_partition
 }
 
 // Get ignition config from the module
 data "ignition_config" "cfssl" {
   disks = [
-    local.disk,
+    local.cfssl_disk,
   ]
 
   filesystems = [

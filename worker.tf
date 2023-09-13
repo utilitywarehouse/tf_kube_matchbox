@@ -83,15 +83,15 @@ EOS
 }
 
 locals {
-  nvme_disk = var.worker_persistent_storage_patition ? data.ignition_disk.storage_worker_nvme.rendered : data.ignition_disk.devnvme.rendered
-  sata_disk = var.worker_persistent_storage_patition ? data.ignition_disk.storage_worker_sda.rendered : data.ignition_disk.devsda.rendered
+  worker_nvme_disk = var.worker_persistent_storage_patition ? data.ignition_disk.storage_worker_nvme.rendered : data.ignition_disk.devnvme.rendered
+  worker_sata_disk = var.worker_persistent_storage_patition ? data.ignition_disk.storage_worker_sda.rendered : data.ignition_disk.devsda.rendered
 }
 
 data "ignition_config" "worker" {
   count = length(var.worker_instances)
 
   disks = [
-    var.worker_instances[count.index].disk_type == "nvme" ? local.nvme_disk : local.sata_disk,
+    var.worker_instances[count.index].disk_type == "nvme" ? local.worker_nvme_disk : local.worker_sata_disk,
   ]
 
   filesystems = [
