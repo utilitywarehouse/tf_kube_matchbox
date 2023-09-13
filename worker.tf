@@ -82,19 +82,28 @@ EOS
   }
 }
 
+locals {
+  worker_nvme_disk = var.worker_persistent_storage_patition ? data.ignition_disk.storage_worker_nvme.rendered : data.ignition_disk.devnvme.rendered
+  worker_sata_disk = var.worker_persistent_storage_patition ? data.ignition_disk.storage_worker_sda.rendered : data.ignition_disk.devsda.rendered
+}
+
 data "ignition_config" "worker" {
   count = length(var.worker_instances)
 
   disks = [
-    var.worker_instances[count.index].disk_type == "nvme" ? data.ignition_disk.devnvme.rendered : data.ignition_disk.devsda.rendered,
+    var.worker_instances[count.index].disk_type == "nvme" ? local.worker_nvme_disk : local.worker_sata_disk,
   ]
 
   filesystems = [
     data.ignition_filesystem.root.rendered,
+    var.worker_persistent_storage_patition ? data.ignition_filesystem.storage.rendered : "",
   ]
 
   systemd = concat(
     var.worker_ignition_systemd,
+    [
+      var.worker_persistent_storage_patition ? data.ignition_systemd_unit.storage_disk_mounter.rendered : "",
+    ]
   )
 
   files = concat(
@@ -104,6 +113,7 @@ data "ignition_config" "worker" {
       data.ignition_file.bond_netdev.rendered,
       data.ignition_file.bond0_worker[count.index].rendered,
       data.ignition_file.worker_hostname[count.index].rendered,
+      var.worker_persistent_storage_patition ? data.ignition_file.format_and_mount.rendered : "",
     ]
   )
 

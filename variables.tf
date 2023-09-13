@@ -156,6 +156,18 @@ variable "worker_ignition_directories" {
   description = "The ignition directories to provide to worker nodes."
 }
 
+variable "worker_persistent_storage_patition" {
+  description = "Whether to create a local disk partition for persistent storage on worker nodes"
+  type        = bool
+  default     = false
+}
+
+variable "worker_persistent_storage_mountpoint" {
+  description = "Location for the local storage partition to be mounted"
+  type        = string
+  default     = "/var/lib/csi-local-hostpath"
+}
+
 variable "nodes_subnet_cidr" {
   description = "Address range for kube slave nodes"
 }
@@ -170,4 +182,10 @@ variable "cluster_internal_svc_subnet" {
 
 variable "pod_network" {
   description = "pod network cidr"
+}
+
+variable "cfssl_local_patition_disk" {
+  description = "Whether to create a local disk partition for storing cfssl data"
+  type        = bool
+  default     = false
 }

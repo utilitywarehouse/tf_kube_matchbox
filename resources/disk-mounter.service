@@ -1,0 +1,8 @@
+[Unit]
+Description=Mounts device on mountpoint, formatting it if necessary
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=${script_path} ${volume_id} ${filesystem} ${user} ${group} ${mountpoint}
+[Install]
+WantedBy=multi-user.target
