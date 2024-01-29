@@ -157,8 +157,8 @@ data "ignition_file" "etcd_iptables_rules" {
 # Allow nodes subnet to talk to etcds for metrics
 -A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 9100 -j ACCEPT
 -A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 9378 -j ACCEPT
-# Allow nodes subnet to talk to fluent-bit exporter for metrics
--A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 8080 -j ACCEPT
+# Allow nodes subnet to talk to promtail for metrics
+-A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 9080 -j ACCEPT
 # Allow docker default subnet to talk to etcds port 2379 for etcdctl-wrapper
 -A INPUT -p tcp -m tcp -s 172.17.0.1/16 --dport 2379 -j ACCEPT
 # Allow incoming ICMP for echo replies, unreachable destination messages, and time exceeded
