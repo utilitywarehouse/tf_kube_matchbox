@@ -141,6 +141,11 @@ variable "worker_instances" {
   }
 }
 
+variable "worker_proxmox_instances" {
+  description = "A list of mac addresses for worker nodes deployed on proxmox"
+  type        = list(string)
+}
+
 variable "worker_ignition_systemd" {
   type        = list(string)
   description = "The systemd files to provide to worker nodes."
