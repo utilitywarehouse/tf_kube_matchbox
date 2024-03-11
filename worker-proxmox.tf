@@ -27,30 +27,10 @@ resource "matchbox_group" "worker_proxmox" {
   }
 }
 
-# Set a hostname
-data "ignition_file" "worker_proxmox_hostname" {
-  count = length(var.worker_proxmox_instances)
-  path  = "/etc/hostname"
-  mode  = 420
-
-  content {
-    content = <<EOS
-worker-proxmox-${count.index}.${var.dns_domain}
-EOS
-  }
-}
-
 data "ignition_config" "worker_proxmox" {
   count = length(var.worker_proxmox_instances)
 
-  systemd = var.worker_ignition_systemd
-
-  files = concat(
-    var.worker_ignition_files,
-    [
-      data.ignition_file.worker_proxmox_hostname[count.index].rendered,
-    ]
-  )
-
+  systemd     = var.worker_ignition_systemd
+  files       = var.worker_ignition_files
   directories = var.worker_ignition_directories
 }
