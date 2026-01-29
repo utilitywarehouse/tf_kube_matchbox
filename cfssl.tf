@@ -90,8 +90,8 @@ data "ignition_file" "cfssl_iptables_rules" {
 -A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 8889 -j ACCEPT
 # Allow workers subnet to talk to node exporter
 -A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 9100 -j ACCEPT
-# Allow nodes subnet to talk to promtail for metrics
--A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 9080 -j ACCEPT
+# Allow nodes subnet to talk to vector for metrics
+-A INPUT -p tcp -m tcp -s "${var.nodes_subnet_cidr}" --dport 8080 -j ACCEPT
 # Allow incoming ICMP for echo replies, unreachable destination messages, and time exceeded
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 0 -j ACCEPT
 -A INPUT -p icmp -m icmp -s "${var.cluster_subnet}" --icmp-type 3 -j ACCEPT
